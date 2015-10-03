@@ -14,11 +14,11 @@ TEMPLATE = app
 
 SOURCES += main.cpp\
         mainwindow.cpp \
-    tablemodel.cpp \
-    teammember.cpp
+    teammember.cpp \
+    teammemberlistmodel.cpp
 
 HEADERS  += mainwindow.h \
-    tablemodel.h \
-    teammember.h
+    teammember.h \
+    teammemberlistmodel.h
 
 FORMS    += mainwindow.ui

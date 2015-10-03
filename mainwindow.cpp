@@ -4,7 +4,7 @@
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
-    model(new QStringListModel()),
+    model(new TeamMemberListModel(this)),
     memberName(), signIn(), signOut()
 {
     ui->setupUi(this);
@@ -13,14 +13,24 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionOpen, SIGNAL(toggled(bool)), this, SLOT(openData()));
     connect(ui->actionSave, SIGNAL(toggled(bool)), this, SLOT(saveData()));
 
-    QStringList names; // Populate this with list of team members
-
-    names << "Bryce Readyhough" << "Colin Moore" << "Andrew Sperling";
-
-    model->setStringList(names);
-
     ui->nameList->setModel(model);
     ui->nameList->setEditTriggers(QAbstractItemView::NoEditTriggers);
+
+    //Populate model with names
+
+    QVariant var;
+
+    model->insertRows(0,5);
+    var.setValue(TeamMember("Test"));
+    model->setData(model->index(0,0), var);
+    var.setValue(TeamMember("Test"));
+    model->setData(model->index(1,0), var);
+    var.setValue(TeamMember("Test"));
+    model->setData(model->index(2,0), var);
+    var.setValue(TeamMember("Test"));
+    model->setData(model->index(3,0), var);
+    var.setValue(TeamMember("Test"));
+    model->setData(model->index(4,0), var);
 
     connect(ui->nameList, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(openMemberView(QModelIndex)));
 
@@ -68,5 +78,4 @@ void MainWindow::saveData()
 void MainWindow::openMemberView(QModelIndex index)
 {
     memberName.setText((model->data(index, Qt::DisplayRole)).toString());
-//    memberName.show();
 }

@@ -2,13 +2,13 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include <QStringListModel>
-#include <QStringList>
 
 #include <QLabel>
 #include <QPushButton>
+#include <QVariant>
 
-#include "tablemodel.h"
+#include "teammemberlistmodel.h"
+#include "teammember.h"
 
 namespace Ui {
 class MainWindow;
@@ -30,7 +30,7 @@ private slots:
     void openMemberView(QModelIndex);
 private:
     Ui::MainWindow *ui;
-    QStringListModel* model;
+    TeamMemberListModel* model;
 
     QLabel memberName;
     QPushButton signIn, signOut;
