@@ -21,15 +21,15 @@ MainWindow::MainWindow(QWidget *parent) :
     QVariant var;
 
     model->insertRows(0,5);
-    var.setValue(TeamMember("Test"));
+    var.setValue(TeamMember("Colin"));
     model->setData(model->index(0,0), var);
-    var.setValue(TeamMember("Test"));
+    var.setValue(TeamMember("Bryce"));
     model->setData(model->index(1,0), var);
-    var.setValue(TeamMember("Test"));
+    var.setValue(TeamMember("Jess"));
     model->setData(model->index(2,0), var);
-    var.setValue(TeamMember("Test"));
+    var.setValue(TeamMember("Justin"));
     model->setData(model->index(3,0), var);
-    var.setValue(TeamMember("Test"));
+    var.setValue(TeamMember("Garret"));
     model->setData(model->index(4,0), var);
 
     connect(ui->nameList, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(openMemberView(QModelIndex)));
@@ -46,13 +46,13 @@ MainWindow::MainWindow(QWidget *parent) :
     signIn.move(0, 145);
     signIn.setText("Sign In");
     signIn.setFont(QFont("Arial", 24));
-    signIn.show();
+    signIn.hide();
 
     signOut.setParent(ui->memberView);
     signOut.move(110, 145);
     signOut.setText("Sign Out");
     signOut.setFont(QFont("Arial", 24));
-    signOut.show();
+    signOut.hide();
 }
 
 MainWindow::~MainWindow()
@@ -78,4 +78,6 @@ void MainWindow::saveData()
 void MainWindow::openMemberView(QModelIndex index)
 {
     memberName.setText((model->data(index, Qt::DisplayRole)).toString());
+    signIn.show();
+    signOut.show();
 }

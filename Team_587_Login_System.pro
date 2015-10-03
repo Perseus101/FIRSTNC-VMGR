@@ -19,6 +19,10 @@ SOURCES += main.cpp\
 
 HEADERS  += mainwindow.h \
     teammember.h \
-    teammemberlistmodel.h
+    teammemberlistmodel.h \
+    rapidxml/rapidxml_iterators.hpp \
+    rapidxml/rapidxml_utils.hpp \
+    rapidxml/rapidxml_print.hpp \
+    rapidxml/rapidxml.hpp
 
 FORMS    += mainwindow.ui
