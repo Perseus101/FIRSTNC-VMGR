@@ -6,9 +6,15 @@
 #include <QLabel>
 #include <QPushButton>
 #include <QVariant>
+#include <QFile>
+#include <QTextStream>
+#include <QDebug>
+
+#include <vector>
 
 #include "teammemberlistmodel.h"
 #include "teammember.h"
+#include "rapidxml/rapidxml.hpp"
 
 namespace Ui {
 class MainWindow;
@@ -33,7 +39,9 @@ private:
     TeamMemberListModel* model;
 
     QLabel memberName;
-    QPushButton signIn, signOut;
+    QFile db_file;
+    char *db_text;
+    rapidxml::xml_document<> db;
 };
 
 #endif // MAINWINDOW_H

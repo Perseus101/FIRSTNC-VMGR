@@ -5,7 +5,8 @@ MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
     model(new TeamMemberListModel(this)),
-    memberName(), signIn(), signOut()
+    memberName(),
+    db_file("database.xml")
 {
     ui->setupUi(this);
 
@@ -18,20 +19,34 @@ MainWindow::MainWindow(QWidget *parent) :
 
     //Populate model with names
 
-    QVariant var;
+    if (db_file.open(QFile::ReadOnly | QFile::Text))
+    {
+        using namespace rapidxml;
+        QTextStream in(&db_file);
 
-    model->insertRows(0,5);
-    var.setValue(TeamMember("Colin"));
-    model->setData(model->index(0,0), var);
-    var.setValue(TeamMember("Bryce"));
-    model->setData(model->index(1,0), var);
-    var.setValue(TeamMember("Jess"));
-    model->setData(model->index(2,0), var);
-    var.setValue(TeamMember("Justin"));
-    model->setData(model->index(3,0), var);
-    var.setValue(TeamMember("Garret"));
-    model->setData(model->index(4,0), var);
+        db_text = new char[db_file.size()];
 
+        strcpy(db_text, in.readAll().toStdString().c_str());
+
+        db.parse<0>(db_text);
+        xml_node<char> * root_node = db.first_node();
+        xml_node<char> * team_members_node = root_node->first_node("teammembers");
+
+        QVariant var;
+
+        int i = 0;
+        for (xml_node<> *member_data = team_members_node->first_node(); member_data; member_data = member_data->next_sibling(), i++)
+        {
+            TeamMember member(member_data->first_attribute("name")->value());
+            var.setValue(member);
+            model->setData(model->index(i,0), var);
+        }
+        qDebug() << i;
+    }
+    else
+    {
+        //TODO handle error
+    }
     connect(ui->nameList, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(openMemberView(QModelIndex)));
 
     //Initialize Member View UI
@@ -42,17 +57,7 @@ MainWindow::MainWindow(QWidget *parent) :
     memberName.setWordWrap(true);
     memberName.setText("                                         ");
 
-    signIn.setParent(ui->memberView);
-    signIn.move(0, 145);
-    signIn.setText("Sign In");
-    signIn.setFont(QFont("Arial", 24));
-    signIn.hide();
 
-    signOut.setParent(ui->memberView);
-    signOut.move(110, 145);
-    signOut.setText("Sign Out");
-    signOut.setFont(QFont("Arial", 24));
-    signOut.hide();
 }
 
 MainWindow::~MainWindow()
@@ -78,6 +83,4 @@ void MainWindow::saveData()
 void MainWindow::openMemberView(QModelIndex index)
 {
     memberName.setText((model->data(index, Qt::DisplayRole)).toString());
-    signIn.show();
-    signOut.show();
 }
