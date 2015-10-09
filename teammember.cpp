@@ -16,7 +16,7 @@ TeamMember::~TeamMember()
 
 }
 
-QString TeamMember::getName() const
+QString TeamMember::getXML()
 {
-    return name;
+    return QString("<member fname=%1 lname=%2 eml=%3 peml=%4 team=%5 grade=%6></member>");
 }

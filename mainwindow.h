@@ -16,6 +16,8 @@
 #include "teammember.h"
 #include "rapidxml/rapidxml.hpp"
 
+#include "register.h"
+
 namespace Ui {
 class MainWindow;
 }
@@ -33,6 +35,9 @@ private slots:
     void openData();
     void saveData();
 
+    void beginRegister();
+    void finishRegister(TeamMember);
+
     void openMemberView(QModelIndex);
 private:
     Ui::MainWindow *ui;
@@ -42,6 +47,7 @@ private:
     QFile db_file;
     char *db_text;
     rapidxml::xml_document<> db;
+    Register reg;
 };
 
 #endif // MAINWINDOW_H

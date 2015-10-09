@@ -12,9 +12,11 @@ public:
     TeamMember(QString);
     ~TeamMember();
 
-   QString getName() const;
+    QString getXML();
+public:
+    QString name, uid, subteam;
+    int grade;
 private:
-    QString name, uid;
     QDateTime in_time,out_time;
 };
 

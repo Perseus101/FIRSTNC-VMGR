@@ -24,7 +24,7 @@
      </rect>
     </property>
     <property name="currentIndex">
-     <number>0</number>
+     <number>1</number>
     </property>
     <widget class="QWidget" name="tab">
      <attribute name="title">
@@ -101,6 +101,7 @@
     <addaction name="actionNew_2"/>
     <addaction name="actionOpen_2"/>
     <addaction name="actionSave_2"/>
+    <addaction name="actionRegister"/>
    </widget>
    <addaction name="menuFile"/>
   </widget>
@@ -141,6 +142,11 @@
   <action name="actionSave_2">
    <property name="text">
     <string>Save</string>
+   </property>
+  </action>
+  <action name="actionRegister">
+   <property name="text">
+    <string>Register</string>
    </property>
   </action>
  </widget>

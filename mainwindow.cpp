@@ -6,13 +6,18 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow),
     model(new TeamMemberListModel(this)),
     memberName(),
-    db_file("database.xml")
+    db_file("database.xml"),
+    reg()
 {
     ui->setupUi(this);
 
-    connect(ui->actionNew, SIGNAL(toggled(bool)), this, SLOT(newData()));
-    connect(ui->actionOpen, SIGNAL(toggled(bool)), this, SLOT(openData()));
-    connect(ui->actionSave, SIGNAL(toggled(bool)), this, SLOT(saveData()));
+    connect(ui->actionNew_2, SIGNAL(triggered(bool)), this, SLOT(newData()));
+    connect(ui->actionOpen_2, SIGNAL(triggered(bool)), this, SLOT(openData()));
+    connect(ui->actionSave_2, SIGNAL(triggered(bool)), this, SLOT(saveData()));
+    connect(ui->actionRegister, SIGNAL(triggered(bool)), this, SLOT(beginRegister()));
+    connect(ui->actionRegister, SIGNAL(triggered(bool)), &reg, SLOT(show()));
+
+    connect(&reg, SIGNAL(registered(TeamMember)), this, SLOT(finishRegister(TeamMember)));
 
     ui->nameList->setModel(model);
     ui->nameList->setEditTriggers(QAbstractItemView::NoEditTriggers);
@@ -29,8 +34,8 @@ MainWindow::MainWindow(QWidget *parent) :
         strcpy(db_text, in.readAll().toStdString().c_str());
 
         db.parse<0>(db_text);
-        xml_node<char> * root_node = db.first_node();
-        xml_node<char> * team_members_node = root_node->first_node("teammembers");
+        xml_node<char> *root_node = db.first_node();
+        xml_node<char> *team_members_node = root_node->first_node("teammembers");
 
         QVariant var;
 
@@ -57,7 +62,6 @@ MainWindow::MainWindow(QWidget *parent) :
     memberName.setWordWrap(true);
     memberName.setText("                                         ");
 
-
 }
 
 MainWindow::~MainWindow()
@@ -67,19 +71,26 @@ MainWindow::~MainWindow()
 
 void MainWindow::newData()
 {
-
+    qDebug() << "new";
 }
 
 void MainWindow::openData()
 {
-
+    qDebug() << "open";
 }
 
 void MainWindow::saveData()
 {
+    qDebug() << "save";
+}
+void MainWindow::beginRegister()
+{
 
 }
+void MainWindow::finishRegister(TeamMember member)
+{
 
+}
 void MainWindow::openMemberView(QModelIndex index)
 {
     memberName.setText((model->data(index, Qt::DisplayRole)).toString());
