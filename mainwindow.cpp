@@ -118,13 +118,10 @@ void MainWindow::finishRegister(TeamMember member)
     temp.setValue(member);
     model->setData(model->index(model->rowCount()-1), temp);
     model->refresh();
-
-    qDebug() << model->data(model->index(model->rowCount()-1), Qt::DisplayRole).toString();
 }
 void MainWindow::openMemberView(QModelIndex index)
 {
     TeamMember member = qvariant_cast<TeamMember>(model->data(index, 6));
-    qDebug() << member.name;
 
     ui->name->setText(member.name);
     ui->grade->setText(((member.grade == 13) ? "Mentor":QString("%1th Grade").arg(member.grade)));

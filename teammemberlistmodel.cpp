@@ -64,8 +64,6 @@ bool TeamMemberListModel::insertRows(int position, int rows, const QModelIndex &
     for(int i = position; i < position+rows; i++)
     {
         memberList.insert(i, TeamMember());
-        qDebug() << i;
-        qDebug() << "R" << rowCount();
     }
     emit dataChanged(this->index(position),this->index(position+rows));
 }
