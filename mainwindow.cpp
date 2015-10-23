@@ -105,17 +105,18 @@ void MainWindow::beginRegister()
 }
 void MainWindow::finishRegister(TeamMember member)
 {
+    // Put new member into database
     rapidxml::xml_document<> member_data;
     char* parse_data = db.allocate_string(member.getXML().toStdString().c_str());
     member_data.parse<0>(parse_data);
     rapidxml::xml_node<> *clone = db.clone_node(member_data.first_node());
     db.first_node()->first_node()->append_node(clone);
 
+    //Display new member in member list
     model->insertRows(model->rowCount(), 1);
-
     QVariant temp;
     temp.setValue(member);
-    model->setData(model->index(model->rowCount()), temp);
+    model->setData(model->index(model->rowCount()-1), temp);
     model->refresh();
 
     qDebug() << model->data(model->index(model->rowCount()-1), Qt::DisplayRole).toString();
