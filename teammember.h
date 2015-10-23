@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QString>
+#include <QStringList>
 #include <QDateTime>
 
 class TeamMember
@@ -14,7 +15,7 @@ public:
 
     QString getXML();
 public:
-    QString name, uid, subteam;
+    QString name, uid, subteam, email, parentEmail;
     int grade;
 private:
     QDateTime in_time,out_time;

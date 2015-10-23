@@ -4,6 +4,8 @@
 #include <QAbstractListModel>
 #include <QList>
 
+#include <QDebug>
+
 #include "teammember.h"
 
 class TeamMemberListModel : public QAbstractListModel
@@ -23,6 +25,8 @@ public:
 
     bool insertRows(int position, int rows, const QModelIndex &index = QModelIndex());
     bool removeRows(int position, int rows, const QModelIndex &index = QModelIndex());
+
+    void refresh();
 private:
     QList<TeamMember> memberList;
 };

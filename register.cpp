@@ -18,7 +18,7 @@ Register::~Register()
 
 void Register::registerFinished()
 {
-    TeamMember temp(ui->firstName->text() + ui->lastName->text());
+    TeamMember temp(ui->firstName->text() + " " + ui->lastName->text());
     if(ui->grade->currentText() == "9th Grade")
     {
         temp.grade = 9;
@@ -41,7 +41,8 @@ void Register::registerFinished()
     }
 
     temp.subteam = ui->team->currentText();
-
+    temp.email = ui->personalEmail->text();
+    temp.parentEmail = ui->parentEmail->text();
     hide();
 
     ui->firstName->setText("");

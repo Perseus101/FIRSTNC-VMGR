@@ -24,29 +24,43 @@ MainWindow::MainWindow(QWidget *parent) :
 
     //Populate model with names
 
-    if (db_file.open(QFile::ReadOnly | QFile::Text))
+    if (db_file.open(QFile::ReadWrite | QFile::Text))
     {
         using namespace rapidxml;
         QTextStream in(&db_file);
 
-        db_text = new char[db_file.size()];
+        db_text = db.allocate_string("", db_file.size());
 
         strcpy(db_text, in.readAll().toStdString().c_str());
 
         db.parse<0>(db_text);
         xml_node<char> *root_node = db.first_node();
         xml_node<char> *team_members_node = root_node->first_node("teammembers");
-
         QVariant var;
 
         int i = 0;
+        for (xml_node<> *member_data = team_members_node->first_node(); member_data; member_data = member_data->next_sibling())
+            i++;
+
+        model->insertRows(0, i);
+
+        i = 0;
         for (xml_node<> *member_data = team_members_node->first_node(); member_data; member_data = member_data->next_sibling(), i++)
         {
-            TeamMember member(member_data->first_attribute("name")->value());
-            var.setValue(member);
-            model->setData(model->index(i,0), var);
+            char* name = db.allocate_string("");
+            strcat(name, member_data->first_attribute("fname")->value());
+            strcat(name, " ");
+            strcat(name, member_data->first_attribute("lname")->value());
+
+            TeamMember temp(name);
+            temp.email = member_data->first_attribute("eml")->value();
+            temp.parentEmail = member_data->first_attribute("peml")->value();
+            temp.subteam = member_data->first_attribute("team")->value();
+            temp.grade = atoi(member_data->first_attribute("grade")->value());
+
+            var.setValue(temp);
+            model->setData(model->index(i), var);
         }
-        qDebug() << i;
     }
     else
     {
@@ -56,17 +70,19 @@ MainWindow::MainWindow(QWidget *parent) :
 
     //Initialize Member View UI
 
-    memberName.setParent(ui->memberView);
-    memberName.move(0, 0);
-    memberName.setFont(QFont("Arial", 24));
-    memberName.setWordWrap(true);
-    memberName.setText("                                         ");
-
 }
 
 MainWindow::~MainWindow()
 {
     delete ui;
+}
+
+void MainWindow::closeEvent(QCloseEvent *event)
+{
+    std::string s;
+    rapidxml::print(std::back_inserter(s), db);
+    db_file.resize(0);
+    db_file.write(s.c_str());
 }
 
 void MainWindow::newData()
@@ -89,9 +105,29 @@ void MainWindow::beginRegister()
 }
 void MainWindow::finishRegister(TeamMember member)
 {
+    rapidxml::xml_document<> member_data;
+    char* parse_data = db.allocate_string(member.getXML().toStdString().c_str());
+    member_data.parse<0>(parse_data);
+    rapidxml::xml_node<> *clone = db.clone_node(member_data.first_node());
+    db.first_node()->first_node()->append_node(clone);
 
+    model->insertRows(model->rowCount(), 1);
+
+    QVariant temp;
+    temp.setValue(member);
+    model->setData(model->index(model->rowCount()), temp);
+    model->refresh();
+
+    qDebug() << model->data(model->index(model->rowCount()-1), Qt::DisplayRole).toString();
 }
 void MainWindow::openMemberView(QModelIndex index)
 {
-    memberName.setText((model->data(index, Qt::DisplayRole)).toString());
+    TeamMember member = qvariant_cast<TeamMember>(model->data(index, 6));
+    qDebug() << member.name;
+
+    ui->name->setText(member.name);
+    ui->grade->setText(((member.grade == 13) ? "Mentor":QString("%1th Grade").arg(member.grade)));
+    ui->team->setText(member.subteam);
+    ui->email->setText(member.email);
+    ui->parentEmail->setText(member.parentEmail);
 }
