@@ -14,6 +14,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionNew_2, SIGNAL(triggered(bool)), this, SLOT(newData()));
     connect(ui->actionOpen_2, SIGNAL(triggered(bool)), this, SLOT(openData()));
     connect(ui->actionSave_2, SIGNAL(triggered(bool)), this, SLOT(saveData()));
+    connect(ui->actionExport, SIGNAL(triggered(bool)), this, SLOT(exportData()));
     connect(ui->actionRegister, SIGNAL(triggered(bool)), this, SLOT(beginRegister()));
     connect(ui->actionRegister, SIGNAL(triggered(bool)), &reg, SLOT(show()));
 
@@ -79,10 +80,10 @@ MainWindow::~MainWindow()
 
 void MainWindow::closeEvent(QCloseEvent *event)
 {
-    std::string s;
-    rapidxml::print(std::back_inserter(s), db);
-    db_file.resize(0);
-    db_file.write(s.c_str());
+//    std::string s;
+//    rapidxml::print(std::back_inserter(s), db);
+//    db_file.resize(0);
+//    db_file.write(s.c_str());
 }
 
 void MainWindow::newData()
@@ -99,6 +100,81 @@ void MainWindow::saveData()
 {
     qDebug() << "save";
 }
+
+void MainWindow::exportData()
+{
+    using namespace rapidxml;
+
+    xml_document<> doc;
+    QFile templateFile ("template.html");
+    if(templateFile.open(QFile::ReadWrite | QFile::Text))
+    {
+        QTextStream in(&templateFile);
+
+        char* templateText = db.allocate_string("", db_file.size());
+        strcpy(templateText, in.readAll().toStdString().c_str());
+        doc.parse<0>(templateText);
+    }
+    else
+        return;
+
+    xml_node<> *body = doc.first_node("body");
+
+    QString nametags("<table><tbody>");
+    // Populate the table with nametags
+
+    for(QList<TeamMember>::iterator member = model->memberList.begin(); member != model->memberList.end(); member++)
+    {
+        //Start row
+        nametags.append("<tr><td class=\"name\">");
+
+        //First Column
+        nametags.append(member->name);
+        nametags.append("<br/>");
+        nametags.append(member->subteam);
+        nametags.append("</td><td class=\"barcode\">");
+        nametags.append(/*member->uid*/"   "); //TODO generate uid for each member
+        nametags.append("</td><td class=\"name\">");
+
+        //Second Column
+        member++;
+        if(member == model->memberList.end())
+            break;
+        nametags.append(member->name);
+        nametags.append("<br/>");
+        nametags.append(member->subteam);
+        nametags.append("</td><td class=\"barcode\">");
+        nametags.append(/*member->uid*/"   "); //TODO generate uid for each member
+        nametags.append("</td>");
+
+        nametags.append("</tr>");
+        //End row
+    }
+    // End the table
+    nametags.append("</tbody></table>");
+
+    qDebug() << nametags;
+
+    rapidxml::xml_document<> tableData;
+    char* parse_data = doc.allocate_string(nametags.toStdString().c_str());
+    tableData.parse<0>(parse_data);
+    rapidxml::xml_node<> *clone = doc.clone_node(tableData.first_node());
+    doc.first_node()->first_node()->append_node(clone);
+
+    std::string s;
+    rapidxml::print(std::back_inserter(s), doc);
+    QString str(s.c_str());
+    str.replace("&quot;", "\"");
+    s = str.toStdString();
+    QString exportFileName = QFileDialog::getSaveFileName(this, QString(), QString(), tr("HTML Files (*.html)"));
+    QFile exportFile (exportFileName);
+    if(exportFile.open(QFile::ReadWrite | QFile::Text))
+    {
+        exportFile.resize(0);
+        exportFile.write(s.c_str());
+    }
+}
+
 void MainWindow::beginRegister()
 {
 

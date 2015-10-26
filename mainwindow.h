@@ -8,19 +8,17 @@
 #include <QVariant>
 #include <QFile>
 #include <QTextStream>
+#include <QFileDialog>
 #include <QDebug>
-
-#include <vector>
 
 #include "teammemberlistmodel.h"
 #include "teammember.h"
+#include "register.h"
 #include "rapidxml/rapidxml.hpp"
 #include "rapidxml/rapidxml_utils.hpp"
 #include "rapidxml/rapidxml_print.hpp"
 
-#include "register.h"
 
-#include <stdio.h>
 
 namespace Ui {
 class MainWindow;
@@ -41,6 +39,7 @@ private slots:
     void newData();
     void openData();
     void saveData();
+    void exportData();
 
     void beginRegister();
     void finishRegister(TeamMember);

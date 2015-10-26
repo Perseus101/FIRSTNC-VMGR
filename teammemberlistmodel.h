@@ -27,7 +27,7 @@ public:
     bool removeRows(int position, int rows, const QModelIndex &index = QModelIndex());
 
     void refresh();
-private:
+
     QList<TeamMember> memberList;
 };
 
