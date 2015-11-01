@@ -54,6 +54,8 @@ private:
     char *db_text;
     rapidxml::xml_document<> db;
     Register reg;
+
+    int nextUid;
 };
 
 #endif // MAINWINDOW_H

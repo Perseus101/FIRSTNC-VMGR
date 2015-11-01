@@ -6,17 +6,20 @@
 #include <QStringList>
 #include <QDateTime>
 
+#include <QDebug>
+
 class TeamMember
 {
 public:
     TeamMember();
     TeamMember(QString);
+    TeamMember(QString, int);
     ~TeamMember();
 
     QString getXML();
-public:
-    QString name, uid, subteam, email, parentEmail;
-    int grade;
+
+    QString name, subteam, email, parentEmail;
+    int grade, uid;
 private:
     QDateTime in_time,out_time;
 };

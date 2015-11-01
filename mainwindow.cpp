@@ -34,11 +34,14 @@ MainWindow::MainWindow(QWidget *parent) :
 
         strcpy(db_text, in.readAll().toStdString().c_str());
 
-        db.parse<0>(db_text);
-        xml_node<char> *root_node = db.first_node();
-        xml_node<char> *team_members_node = root_node->first_node("teammembers");
-        QVariant var;
+        // Use parse_no_data_nodes so that the data can be edited later
+        db.parse<parse_no_data_nodes>(db_text);
+        xml_node<> *root_node = db.first_node();
+        xml_node<> *team_members_node = root_node->first_node("teammembers");
 
+        nextUid = atoi(team_members_node->first_node("uid")->value());
+
+        QVariant var;
         int i = 0;
         for (xml_node<> *member_data = team_members_node->first_node(); member_data; member_data = member_data->next_sibling())
             i++;
@@ -46,14 +49,14 @@ MainWindow::MainWindow(QWidget *parent) :
         model->insertRows(0, i);
 
         i = 0;
-        for (xml_node<> *member_data = team_members_node->first_node(); member_data; member_data = member_data->next_sibling(), i++)
+        for (xml_node<> *member_data = team_members_node->first_node("member"); member_data; member_data = member_data->next_sibling(), i++)
         {
             char* name = db.allocate_string("");
             strcat(name, member_data->first_attribute("fname")->value());
             strcat(name, " ");
             strcat(name, member_data->first_attribute("lname")->value());
 
-            TeamMember temp(name);
+            TeamMember temp(name, atoi(member_data->first_attribute("uid")->value()));
             temp.email = member_data->first_attribute("eml")->value();
             temp.parentEmail = member_data->first_attribute("peml")->value();
             temp.subteam = member_data->first_attribute("team")->value();
@@ -71,6 +74,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
     //Initialize Member View UI
 
+    ui->memberView->hide();
+
 }
 
 MainWindow::~MainWindow()
@@ -80,10 +85,15 @@ MainWindow::~MainWindow()
 
 void MainWindow::closeEvent(QCloseEvent *event)
 {
-//    std::string s;
-//    rapidxml::print(std::back_inserter(s), db);
-//    db_file.resize(0);
-//    db_file.write(s.c_str());
+    char* nextUidString = db.allocate_string("", 8);
+    sprintf(nextUidString, "%d", nextUid);
+    db.first_node()->first_node("teammembers")->first_node("uid")->value(nextUidString);
+
+    std::string s;
+    rapidxml::print(std::back_inserter(s), db);
+
+    db_file.resize(0);
+    db_file.write(s.c_str());
 }
 
 void MainWindow::newData()
@@ -133,7 +143,7 @@ void MainWindow::exportData()
         nametags.append("<br/>");
         nametags.append(member->subteam);
         nametags.append("</td><td class=\"barcode\">");
-        nametags.append(/*member->uid*/"   "); //TODO generate uid for each member
+        nametags.append(QString("*%1*").arg(member->uid, 8, 10, QChar('0')));
         nametags.append("</td><td class=\"name\">");
 
         //Second Column
@@ -144,7 +154,7 @@ void MainWindow::exportData()
         nametags.append("<br/>");
         nametags.append(member->subteam);
         nametags.append("</td><td class=\"barcode\">");
-        nametags.append(/*member->uid*/"   "); //TODO generate uid for each member
+        nametags.append(QString("*%1*").arg(member->uid, 8, 10, QChar('0')));
         nametags.append("</td>");
 
         nametags.append("</tr>");
@@ -181,6 +191,10 @@ void MainWindow::beginRegister()
 }
 void MainWindow::finishRegister(TeamMember member)
 {
+    //Assign the new member a uid
+    member.uid = nextUid;
+    nextUid++;
+
     // Put new member into database
     rapidxml::xml_document<> member_data;
     char* parse_data = db.allocate_string(member.getXML().toStdString().c_str());
@@ -189,7 +203,6 @@ void MainWindow::finishRegister(TeamMember member)
     db.first_node()->first_node()->append_node(clone);
 
     //Display new member in member list
-    model->insertRows(model->rowCount(), 1);
     QVariant temp;
     temp.setValue(member);
     model->setData(model->index(model->rowCount()-1), temp);
@@ -204,4 +217,6 @@ void MainWindow::openMemberView(QModelIndex index)
     ui->team->setText(member.subteam);
     ui->email->setText(member.email);
     ui->parentEmail->setText(member.parentEmail);
+
+    ui->memberView->show();
 }
