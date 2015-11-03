@@ -7,7 +7,8 @@ MainWindow::MainWindow(QWidget *parent) :
     model(new TeamMemberListModel(this)),
     memberName(),
     db_file("database.xml"),
-    reg()
+    reg(),
+    readingBarcode(false)
 {
     ui->setupUi(this);
 
@@ -17,6 +18,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionExport, SIGNAL(triggered(bool)), this, SLOT(exportData()));
     connect(ui->actionRegister, SIGNAL(triggered(bool)), this, SLOT(beginRegister()));
     connect(ui->actionRegister, SIGNAL(triggered(bool)), &reg, SLOT(show()));
+    connect(ui->barcodeInput, SIGNAL(textChanged(QString)), this, SLOT(startBarcodeRead()));
 
     connect(&reg, SIGNAL(registered(TeamMember)), this, SLOT(finishRegister(TeamMember)));
 
@@ -219,4 +221,35 @@ void MainWindow::openMemberView(QModelIndex index)
     ui->parentEmail->setText(member.parentEmail);
 
     ui->memberView->show();
+}
+
+
+void MainWindow::startBarcodeRead()
+{
+    if(!readingBarcode)
+    {
+        //Give the reader time to write all the characters of the barcode
+        //If this is regular keyboard input, it will take longer than 100 ms, and then be cleared out
+        QTimer::singleShot(100, this, SLOT(endBarcodeRead()));
+        readingBarcode = true;
+    }
+}
+
+void MainWindow::endBarcodeRead()
+{
+    if(QRegExp("^[0-9]{1,8}$").exactMatch(ui->barcodeInput->text()))
+    {
+        int searchUid = ui->barcodeInput->text().toInt();
+        //Input matches valid barcode format
+        int i = 0;
+        for(QList<TeamMember>::iterator it = model->memberList.begin(); it != model->memberList.end(); it++, i++)
+        {
+            if(it->uid == searchUid)
+            {
+                openMemberView(model->index(i));
+            }
+        }
+    }
+    ui->barcodeInput->setText(QString(""));
+    readingBarcode = false;
 }

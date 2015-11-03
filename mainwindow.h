@@ -9,6 +9,7 @@
 #include <QFile>
 #include <QTextStream>
 #include <QFileDialog>
+#include <QTimer>
 #include <QDebug>
 
 #include "teammemberlistmodel.h"
@@ -45,6 +46,9 @@ private slots:
     void finishRegister(TeamMember);
 
     void openMemberView(QModelIndex);
+
+    void startBarcodeRead();
+    void endBarcodeRead();
 private:
     Ui::MainWindow *ui;
     TeamMemberListModel* model;
@@ -54,6 +58,7 @@ private:
     char *db_text;
     rapidxml::xml_document<> db;
     Register reg;
+    bool readingBarcode;
 
     int nextUid;
 };
