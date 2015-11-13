@@ -298,12 +298,26 @@ void MainWindow::openMemberView(QModelIndex index)
     ui->email->setText(member.email);
     ui->parentEmail->setText(member.parentEmail);
 
-    ui->inTime->setText(QString(""));
-    ui->outTime->setText(QString(""));
-
-    ui->signIn->setDisabled(false);
-    ui->signOut->setDisabled(false);
-
+    if(member.in_time.isValid())
+    {
+        ui->inTime->setText(QString("Signed in at %1").arg(member.in_time.toString("hh:mm:ss")));
+        ui->signIn->setDisabled(true);
+    }
+    else
+    {
+        ui->inTime->setText(QString(""));
+        ui->signIn->setDisabled(false);
+    }
+    if(member.out_time.isValid())
+    {
+        ui->outTime->setText(QString("Signed out at %1").arg(member.out_time.toString("hh:mm:ss")));
+        ui->signOut->setDisabled(true);
+    }
+    else
+    {
+        ui->outTime->setText(QString(""));
+        ui->signOut->setDisabled(false);
+    }
     selectedMember = index;
 }
 
@@ -345,10 +359,10 @@ void MainWindow::endBarcodeRead()
         for(QList<TeamMember>::iterator it = model->memberList.begin(); it != model->memberList.end(); it++, i++)
         {
             if(it->uid == searchUid)
-            {
                 openMemberView(model->index(i));
-            }
         }
+        if(!(model->memberList.at(selectedMember.row()).in_time.isValid()))
+            signIn();
     }
     ui->barcodeInput->setText(QString(""));
     readingBarcode = false;
@@ -376,6 +390,6 @@ void MainWindow::signOut()
         temp.out_time = QDateTime::currentDateTime();
         model->memberList.replace(selectedMember.row(), temp);
         ui->signOut->setDisabled(true);
-        ui->outTime->setText(QString("Signed in at %1").arg(model->memberList.at(selectedMember.row()).out_time.toString("hh:mm:ss")));
+        ui->outTime->setText(QString("Signed out at %1").arg(model->memberList.at(selectedMember.row()).out_time.toString("hh:mm:ss")));
     }
 }
