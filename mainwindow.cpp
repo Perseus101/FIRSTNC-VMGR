@@ -88,6 +88,37 @@ void MainWindow::closeEvent(QCloseEvent *event)
     sprintf(nextUidString, "%d", nextUid);
     db.first_node()->first_node("teammembers")->first_node("uid")->value(nextUidString);
 
+    xml_node<> *root_node = db.first_node();
+    xml_node<> *team_members_node = root_node->first_node("teammembers");
+
+    //Save the in time and out time of each member who logged in at the event
+    int i = 0;
+    for (xml_node<> *member_data = team_members_node->first_node("member"); member_data; member_data = member_data->next_sibling(), i++)
+    {
+        //Build the element to be inserted
+        if(model->memberList.at(i).in_time.isValid())
+        {
+            QString insertDataString = QString("<event name=\"%1\" date=\"%2\" inTime=\"%3\" outTime=\"%4\"/>")
+                    .arg("Regular Meeting").arg(QDate::currentDate().toString("MM-dd-yyyy"))
+                    .arg(model->memberList.at(i).in_time.toString("hh:mm:ss"))
+                    .arg(model->memberList.at(i).out_time.isValid()?
+                             model->memberList.at(i).out_time.toString("hh:mm:ss"):
+                             QDateTime::currentDateTime().toString("hh:mm:ss"));
+
+            // Parse the data and insert it into the database
+            rapidxml::xml_document<> insertData;
+            char* parse_data = db.allocate_string(insertDataString.toStdString().c_str());
+            insertData.parse<0>(parse_data);
+            rapidxml::xml_node<> *clone = db.clone_node(insertData.first_node());
+            member_data->append_node(clone);
+        }
+        else
+        {
+            // Member didn't sign in
+            continue;
+        }
+    }
+
     std::string s;
     rapidxml::print(std::back_inserter(s), db);
 
@@ -219,7 +250,11 @@ void MainWindow::openMemberView(QModelIndex index)
     ui->email->setText(member.email);
     ui->parentEmail->setText(member.parentEmail);
 
-    ui->memberView->show();
+    ui->inTime->setText(QString(""));
+    ui->outTime->setText(QString(""));
+
+    ui->signIn->setDisabled(false);
+    ui->signOut->setDisabled(false);
 
     selectedMember = index;
 }
@@ -261,7 +296,8 @@ void MainWindow::signIn()
         TeamMember temp = model->memberList.at(selectedMember.row());
         temp.in_time = QDateTime::currentDateTime();
         model->memberList.replace(selectedMember.row(), temp);
-        qDebug() << model->memberList.at(selectedMember.row()).in_time.toString("hh:mm:ss");
+        ui->signIn->setDisabled(true);
+        ui->inTime->setText(QString("Signed in at %1").arg(model->memberList.at(selectedMember.row()).in_time.toString("hh:mm:ss")));
     }
 }
 
@@ -269,9 +305,12 @@ void MainWindow::signOut()
 {
     if(selectedMember.isValid())
     {
+        if(!(model->memberList.at(selectedMember.row()).in_time.isValid())) // User isn't signed in, therefore can't sign out.
+            return;
         TeamMember temp = model->memberList.at(selectedMember.row());
         temp.out_time = QDateTime::currentDateTime();
         model->memberList.replace(selectedMember.row(), temp);
-        qDebug() << model->memberList.at(selectedMember.row()).out_time.toString("hh:mm:ss");
+        ui->signOut->setDisabled(true);
+        ui->outTime->setText(QString("Signed in at %1").arg(model->memberList.at(selectedMember.row()).out_time.toString("hh:mm:ss")));
     }
 }
