@@ -49,16 +49,19 @@ private slots:
 
     void startBarcodeRead();
     void endBarcodeRead();
+
+    void signIn();
+    void signOut();
 private:
     Ui::MainWindow *ui;
     TeamMemberListModel* model;
 
-    QLabel memberName;
     QFile db_file;
     char *db_text;
     rapidxml::xml_document<> db;
     Register reg;
     bool readingBarcode;
+    QModelIndex selectedMember;
 
     int nextUid;
 };

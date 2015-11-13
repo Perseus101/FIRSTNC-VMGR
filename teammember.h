@@ -20,8 +20,8 @@ public:
 
     QString name, subteam, email, parentEmail;
     int grade, uid;
-private:
     QDateTime in_time,out_time;
+
 };
 
 Q_DECLARE_METATYPE(TeamMember)

@@ -5,7 +5,6 @@ MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
     model(new TeamMemberListModel(this)),
-    memberName(),
     db_file("database.xml"),
     reg(),
     readingBarcode(false)
@@ -18,7 +17,10 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionExport, SIGNAL(triggered(bool)), this, SLOT(exportData()));
     connect(ui->actionRegister, SIGNAL(triggered(bool)), this, SLOT(beginRegister()));
     connect(ui->actionRegister, SIGNAL(triggered(bool)), &reg, SLOT(show()));
+    connect(ui->signIn, SIGNAL(clicked(bool)), this, SLOT(signIn()));
+    connect(ui->signOut, SIGNAL(clicked(bool)), this, SLOT(signOut()));
     connect(ui->barcodeInput, SIGNAL(textChanged(QString)), this, SLOT(startBarcodeRead()));
+    connect(ui->nameList, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(openMemberView(QModelIndex)));
 
     connect(&reg, SIGNAL(registered(TeamMember)), this, SLOT(finishRegister(TeamMember)));
 
@@ -48,7 +50,7 @@ MainWindow::MainWindow(QWidget *parent) :
         for (xml_node<> *member_data = team_members_node->first_node(); member_data; member_data = member_data->next_sibling())
             i++;
 
-        model->insertRows(0, i);
+        model->insertRows(0, i-1);
 
         i = 0;
         for (xml_node<> *member_data = team_members_node->first_node("member"); member_data; member_data = member_data->next_sibling(), i++)
@@ -72,12 +74,6 @@ MainWindow::MainWindow(QWidget *parent) :
     {
         //TODO handle error
     }
-    connect(ui->nameList, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(openMemberView(QModelIndex)));
-
-    //Initialize Member View UI
-
-    ui->memberView->hide();
-
 }
 
 MainWindow::~MainWindow()
@@ -87,6 +83,7 @@ MainWindow::~MainWindow()
 
 void MainWindow::closeEvent(QCloseEvent *event)
 {
+    using namespace rapidxml;
     char* nextUidString = db.allocate_string("", 8);
     sprintf(nextUidString, "%d", nextUid);
     db.first_node()->first_node("teammembers")->first_node("uid")->value(nextUidString);
@@ -191,6 +188,7 @@ void MainWindow::beginRegister()
 {
 
 }
+
 void MainWindow::finishRegister(TeamMember member)
 {
     //Assign the new member a uid
@@ -210,6 +208,7 @@ void MainWindow::finishRegister(TeamMember member)
     model->setData(model->index(model->rowCount()-1), temp);
     model->refresh();
 }
+
 void MainWindow::openMemberView(QModelIndex index)
 {
     TeamMember member = qvariant_cast<TeamMember>(model->data(index, 6));
@@ -221,8 +220,9 @@ void MainWindow::openMemberView(QModelIndex index)
     ui->parentEmail->setText(member.parentEmail);
 
     ui->memberView->show();
-}
 
+    selectedMember = index;
+}
 
 void MainWindow::startBarcodeRead()
 {
@@ -237,7 +237,7 @@ void MainWindow::startBarcodeRead()
 
 void MainWindow::endBarcodeRead()
 {
-    if(QRegExp("^[0-9]{1,8}$").exactMatch(ui->barcodeInput->text()))
+    if(QRegExp("^[0-9]{1,8}$").exactMatch(ui->barcodeInput->text()))// If the input text is exactly 8 numeric characters, it matches the barcode format we are looking for.
     {
         int searchUid = ui->barcodeInput->text().toInt();
         //Input matches valid barcode format
@@ -252,4 +252,26 @@ void MainWindow::endBarcodeRead()
     }
     ui->barcodeInput->setText(QString(""));
     readingBarcode = false;
+}
+
+void MainWindow::signIn()
+{
+    if(selectedMember.isValid())
+    {
+        TeamMember temp = model->memberList.at(selectedMember.row());
+        temp.in_time = QDateTime::currentDateTime();
+        model->memberList.replace(selectedMember.row(), temp);
+        qDebug() << model->memberList.at(selectedMember.row()).in_time.toString("hh:mm:ss");
+    }
+}
+
+void MainWindow::signOut()
+{
+    if(selectedMember.isValid())
+    {
+        TeamMember temp = model->memberList.at(selectedMember.row());
+        temp.out_time = QDateTime::currentDateTime();
+        model->memberList.replace(selectedMember.row(), temp);
+        qDebug() << model->memberList.at(selectedMember.row()).out_time.toString("hh:mm:ss");
+    }
 }

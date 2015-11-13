@@ -77,7 +77,7 @@
             </property>
             <layout class="QHBoxLayout" name="horizontalLayout_2">
              <item>
-              <widget class="QPushButton" name="pushButton">
+              <widget class="QPushButton" name="signIn">
                <property name="font">
                 <font>
                  <pointsize>24</pointsize>
@@ -89,7 +89,7 @@
               </widget>
              </item>
              <item>
-              <widget class="QPushButton" name="pushButton_2">
+              <widget class="QPushButton" name="signOut">
                <property name="font">
                 <font>
                  <pointsize>24</pointsize>
