@@ -5,7 +5,6 @@ MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
     model(new TeamMemberListModel(this)),
-    db_file("database.xml"),
     reg(),
     readingBarcode(false)
 {
@@ -27,53 +26,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->nameList->setModel(model);
     ui->nameList->setEditTriggers(QAbstractItemView::NoEditTriggers);
 
-    //Populate model with names
-
-    if (db_file.open(QFile::ReadWrite | QFile::Text))
-    {
-        using namespace rapidxml;
-        QTextStream in(&db_file);
-
-        db_text = db.allocate_string("", db_file.size());
-
-        strcpy(db_text, in.readAll().toStdString().c_str());
-
-        // Use parse_no_data_nodes so that the data can be edited later
-        db.parse<parse_no_data_nodes>(db_text);
-        xml_node<> *root_node = db.first_node();
-        xml_node<> *team_members_node = root_node->first_node("teammembers");
-
-        nextUid = atoi(team_members_node->first_node("uid")->value());
-
-        QVariant var;
-        int i = 0;
-        for (xml_node<> *member_data = team_members_node->first_node(); member_data; member_data = member_data->next_sibling())
-            i++;
-
-        model->insertRows(0, i-1);
-
-        i = 0;
-        for (xml_node<> *member_data = team_members_node->first_node("member"); member_data; member_data = member_data->next_sibling(), i++)
-        {
-            char* name = db.allocate_string("");
-            strcat(name, member_data->first_attribute("fname")->value());
-            strcat(name, " ");
-            strcat(name, member_data->first_attribute("lname")->value());
-
-            TeamMember temp(name, atoi(member_data->first_attribute("uid")->value()));
-            temp.email = member_data->first_attribute("eml")->value();
-            temp.parentEmail = member_data->first_attribute("peml")->value();
-            temp.subteam = member_data->first_attribute("team")->value();
-            temp.grade = atoi(member_data->first_attribute("grade")->value());
-
-            var.setValue(temp);
-            model->setData(model->index(i), var);
-        }
-    }
-    else
-    {
-        //TODO handle error
-    }
+    openData("database.db");
 }
 
 MainWindow::~MainWindow()
@@ -81,7 +34,7 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-void MainWindow::closeEvent(QCloseEvent *event)
+void MainWindow::saveDatabase(QString filename)
 {
     using namespace rapidxml;
     char* nextUidString = db.allocate_string("", 8);
@@ -122,23 +75,116 @@ void MainWindow::closeEvent(QCloseEvent *event)
     std::string s;
     rapidxml::print(std::back_inserter(s), db);
 
-    db_file.resize(0);
-    db_file.write(s.c_str());
+    QFile db_file(filename);
+    if(db_file.open(QFile::ReadWrite | QFile::Text))
+    {
+        db_file.resize(0);
+        db_file.write(s.c_str());
+    }
 }
 
-void MainWindow::newData()
+void MainWindow::closeEvent(QCloseEvent *event)
 {
-    qDebug() << "new";
+    saveDatabase("database.db");
+}
+
+bool MainWindow::newData()
+{
+    QMessageBox msgBox;
+    msgBox.setText("Would you like to save this database?");
+    msgBox.setInformativeText("If you do not save this database, all it's contents will be PERMANENTLY erased.");
+    msgBox.setStandardButtons(QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel);
+    msgBox.setDefaultButton(QMessageBox::Save);
+    int ret = msgBox.exec();
+    switch(ret)
+    {
+    case QMessageBox::Save:
+        saveDatabase(QFileDialog::getSaveFileName(this, QString(), QString(), tr("Database Files (*.db)")));
+        break;
+    case QMessageBox::Cancel:
+        return false;
+        break;
+    case QMessageBox::Discard:
+        break;
+    }
+    // Reset the database file to default
+    if(QFile::exists("db_template.xml"))
+    {
+        QFile::remove("database.db");
+        QFile::copy("db_template.xml", "database.db");
+    }
+    // Purge all members that were loaded into the model
+    model->memberList.clear();
+    // Clear out the member view
+    closeMemberView();
+    return true;
 }
 
 void MainWindow::openData()
 {
-    qDebug() << "open";
+    // Clear out whatever is currently in the database
+    if(newData())
+        // Load new data
+        openData(QFileDialog::getOpenFileName(this, QString(), QString(), tr("Database Files (*.db);; All Files (*.*)")));
+}
+
+void MainWindow::openData(QString filename)
+{
+    //Populate model with names
+    QFile db_file(filename);
+    if(db_file.open(QFile::ReadWrite | QFile::Text))
+    {
+        using namespace rapidxml;
+        QTextStream in(&db_file);
+
+        char* db_text = db.allocate_string("", db_file.size());
+
+        strcpy(db_text, in.readAll().toStdString().c_str());
+
+        // Use parse_no_data_nodes so that the data can be edited later
+        db.parse<parse_no_data_nodes>(db_text);
+        xml_node<> *root_node = db.first_node();
+        xml_node<> *team_members_node = root_node->first_node("teammembers");
+
+        nextUid = atoi(team_members_node->first_node("uid")->value());
+
+        QVariant var;
+        int i = 0;
+        for (xml_node<> *member_data = team_members_node->first_node(); member_data; member_data = member_data->next_sibling())
+            i++;
+
+        if(i != 0)
+            model->insertRows(0, i-1);
+
+        i = 0;
+        for (xml_node<> *member_data = team_members_node->first_node("member"); member_data; member_data = member_data->next_sibling(), i++)
+        {
+            char* name = db.allocate_string("");
+            strcat(name, member_data->first_attribute("fname")->value());
+            strcat(name, " ");
+            strcat(name, member_data->first_attribute("lname")->value());
+
+            TeamMember temp(name, atoi(member_data->first_attribute("uid")->value()));
+            temp.email = member_data->first_attribute("eml")->value();
+            temp.parentEmail = member_data->first_attribute("peml")->value();
+            temp.subteam = member_data->first_attribute("team")->value();
+            temp.grade = atoi(member_data->first_attribute("grade")->value());
+
+            var.setValue(temp);
+            model->setData(model->index(i), var);
+        }
+    }
+    else
+    {
+        //TODO handle error
+    }
+    openMemberView(model->index(0));
 }
 
 void MainWindow::saveData()
 {
-    qDebug() << "save";
+    QString filter = QString("Database Files (*.db)");
+    saveDatabase(QFileDialog::getSaveFileName(this, QString(), QString(), filter, &filter));
 }
 
 void MainWindow::exportData()
@@ -151,7 +197,7 @@ void MainWindow::exportData()
     {
         QTextStream in(&templateFile);
 
-        char* templateText = db.allocate_string("", db_file.size());
+        char* templateText = db.allocate_string("", templateFile.size());
         strcpy(templateText, in.readAll().toStdString().c_str());
         doc.parse<0>(templateText);
     }
@@ -242,6 +288,8 @@ void MainWindow::finishRegister(TeamMember member)
 
 void MainWindow::openMemberView(QModelIndex index)
 {
+    if(!index.isValid())
+        return;
     TeamMember member = qvariant_cast<TeamMember>(model->data(index, 6));
 
     ui->name->setText(member.name);
@@ -257,6 +305,23 @@ void MainWindow::openMemberView(QModelIndex index)
     ui->signOut->setDisabled(false);
 
     selectedMember = index;
+}
+
+void MainWindow::closeMemberView()
+{
+    ui->name->setText("");
+    ui->grade->setText("");
+    ui->team->setText("");
+    ui->email->setText("");
+    ui->parentEmail->setText("");
+
+    ui->inTime->setText(QString(""));
+    ui->outTime->setText(QString(""));
+
+    ui->signIn->setDisabled(false);
+    ui->signOut->setDisabled(false);
+
+    selectedMember = model->index(-1);
 }
 
 void MainWindow::startBarcodeRead()

@@ -11,6 +11,7 @@
 #include <QFileDialog>
 #include <QTimer>
 #include <QDebug>
+#include <QMessageBox>
 
 #include "teammemberlistmodel.h"
 #include "teammember.h"
@@ -37,8 +38,9 @@ protected:
      void closeEvent(QCloseEvent *event);
 
 private slots:
-    void newData();
+    bool newData();
     void openData();
+    void openData(QString);
     void saveData();
     void exportData();
 
@@ -46,6 +48,7 @@ private slots:
     void finishRegister(TeamMember);
 
     void openMemberView(QModelIndex);
+    void closeMemberView();
 
     void startBarcodeRead();
     void endBarcodeRead();
@@ -53,17 +56,19 @@ private slots:
     void signIn();
     void signOut();
 private:
+
+    void saveDatabase(QString);
+
     Ui::MainWindow *ui;
     TeamMemberListModel* model;
 
-    QFile db_file;
-    char *db_text;
     rapidxml::xml_document<> db;
     Register reg;
     bool readingBarcode;
     QModelIndex selectedMember;
 
     int nextUid;
+
 };
 
 #endif // MAINWINDOW_H
