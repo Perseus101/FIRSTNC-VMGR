@@ -13,7 +13,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionNew_2, SIGNAL(triggered(bool)), this, SLOT(newData()));
     connect(ui->actionOpen_2, SIGNAL(triggered(bool)), this, SLOT(openData()));
     connect(ui->actionSave_2, SIGNAL(triggered(bool)), this, SLOT(saveData()));
-    connect(ui->actionExport, SIGNAL(triggered(bool)), this, SLOT(exportData()));
+    connect(ui->actionExport_Nametags, SIGNAL(triggered(bool)), this, SLOT(exportData()));
     connect(ui->actionRegister, SIGNAL(triggered(bool)), this, SLOT(beginRegister()));
     connect(ui->actionRegister, SIGNAL(triggered(bool)), &reg, SLOT(show()));
     connect(ui->signIn, SIGNAL(clicked(bool)), this, SLOT(signIn()));
@@ -23,10 +23,37 @@ MainWindow::MainWindow(QWidget *parent) :
 
     connect(&reg, SIGNAL(registered(TeamMember)), this, SLOT(finishRegister(TeamMember)));
 
+    // Set up the list of names to be populated from the database
+
     ui->nameList->setModel(model);
-    ui->nameList->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    ui->nameList->setEditTriggers(QAbstractItemView::NoEditTriggers); // Prevent editing data
 
     openData("database.db");
+
+    // Set up tables on admin panel showing in and out times
+    ui->inTimes->setColumnCount(2);
+    ui->inTimes->setRowCount(model->memberList.size());
+    ui->inTimes->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch); //Make the columns fill the whitespace
+    ui->inTimes->verticalHeader()->setVisible(false);
+
+    ui->outTimes->setColumnCount(2);
+    ui->outTimes->setRowCount(model->memberList.size());
+    ui->outTimes->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch); //Make the columns fill the whitespace
+    ui->outTimes->verticalHeader()->setVisible(false);
+
+    QStringList headers;
+    headers << "Member" << "In Time";
+    ui->inTimes->setHorizontalHeaderLabels(headers);
+    headers.replace(1, "Out Time");
+    ui->outTimes->setHorizontalHeaderLabels(headers);
+
+    int i = 0;
+    for(QList<TeamMember>::iterator it = model->memberList.begin(); it != model->memberList.end(); it++, i++)
+    {
+        ui->inTimes->setItem(i, 0, new QTableWidgetItem(it->name));
+
+        ui->outTimes->setItem(i, 0, new QTableWidgetItem(it->name));
+    }
 }
 
 MainWindow::~MainWindow()
@@ -138,7 +165,6 @@ void MainWindow::openData(QString filename)
         QTextStream in(&db_file);
 
         char* db_text = db.allocate_string("", db_file.size());
-
         strcpy(db_text, in.readAll().toStdString().c_str());
 
         // Use parse_no_data_nodes so that the data can be edited later
@@ -225,7 +251,10 @@ void MainWindow::exportData()
         //Second Column
         member++;
         if(member == model->memberList.end())
+        {
+            nametags.append("</td><td class=\"barcode\"></td></tr>");
             break;
+        }
         nametags.append(member->name);
         nametags.append("<br/>");
         nametags.append(member->subteam);
@@ -377,6 +406,8 @@ void MainWindow::signIn()
         model->memberList.replace(selectedMember.row(), temp);
         ui->signIn->setDisabled(true);
         ui->inTime->setText(QString("Signed in at %1").arg(model->memberList.at(selectedMember.row()).in_time.toString("hh:mm:ss")));
+
+        ui->inTimes->setItem(selectedMember.row(), 1, new QTableWidgetItem(model->memberList.at(selectedMember.row()).in_time.toString("hh:mm:ss")));
     }
 }
 
@@ -391,5 +422,7 @@ void MainWindow::signOut()
         model->memberList.replace(selectedMember.row(), temp);
         ui->signOut->setDisabled(true);
         ui->outTime->setText(QString("Signed out at %1").arg(model->memberList.at(selectedMember.row()).out_time.toString("hh:mm:ss")));
+
+        ui->outTimes->setItem(selectedMember.row(), 1, new QTableWidgetItem(model->memberList.at(selectedMember.row()).out_time.toString("hh:mm:ss")));
     }
 }

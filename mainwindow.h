@@ -10,8 +10,8 @@
 #include <QTextStream>
 #include <QFileDialog>
 #include <QTimer>
-#include <QDebug>
 #include <QMessageBox>
+#include <QDebug>
 
 #include "teammemberlistmodel.h"
 #include "teammember.h"
