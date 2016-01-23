@@ -170,7 +170,20 @@ void MainWindow::openData(QString filename)
         // Use parse_no_data_nodes so that the data can be edited later
         db.parse<parse_no_data_nodes>(db_text);
         xml_node<> *root_node = db.first_node();
+        if(!root_node)
+        {
+            qDebug() << "Invalid File Format"; // TODO Error Handling
+            openData("db_template.xml");
+            return;
+        }
+
         xml_node<> *team_members_node = root_node->first_node("teammembers");
+        if(!team_members_node)
+        {
+            qDebug() << "Invalid File Format"; // TODO Error Handling
+            openData("db_template.xml");
+            return;
+        }
 
         nextUid = atoi(team_members_node->first_node("uid")->value());
 
