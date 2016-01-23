@@ -12,13 +12,13 @@ class TeamMember
 {
 public:
     TeamMember();
-    TeamMember(QString);
-    TeamMember(QString, int);
+    TeamMember(QString, QString);
+    TeamMember(QString, QString, int);
     ~TeamMember();
 
     QString getXML();
 
-    QString name, subteam, email, parentEmail;
+    QString fname, lname, subteam, email, parentEmail;
     int grade, uid;
     QDateTime in_time,out_time;
 

@@ -50,9 +50,9 @@ MainWindow::MainWindow(QWidget *parent) :
     int i = 0;
     for(QList<TeamMember>::iterator it = model->memberList.begin(); it != model->memberList.end(); it++, i++)
     {
-        ui->inTimes->setItem(i, 0, new QTableWidgetItem(it->name));
+        ui->inTimes->setItem(i, 0, new QTableWidgetItem(it->fname + it->lname));
 
-        ui->outTimes->setItem(i, 0, new QTableWidgetItem(it->name));
+        ui->outTimes->setItem(i, 0, new QTableWidgetItem(it->fname + it->lname));
     }
 }
 
@@ -198,12 +198,7 @@ void MainWindow::openData(QString filename)
         i = 0;
         for (xml_node<> *member_data = team_members_node->first_node("member"); member_data; member_data = member_data->next_sibling(), i++)
         {
-            char* name = db.allocate_string("");
-            strcat(name, member_data->first_attribute("fname")->value());
-            strcat(name, " ");
-            strcat(name, member_data->first_attribute("lname")->value());
-
-            TeamMember temp(name, atoi(member_data->first_attribute("uid")->value()));
+            TeamMember temp(member_data->first_attribute("fname")->value(), member_data->first_attribute("lname")->value(), atoi(member_data->first_attribute("uid")->value()));
             temp.email = member_data->first_attribute("eml")->value();
             temp.parentEmail = member_data->first_attribute("peml")->value();
             temp.subteam = member_data->first_attribute("team")->value();
@@ -228,78 +223,42 @@ void MainWindow::saveData()
 
 void MainWindow::exportData()
 {
-    using namespace rapidxml;
+    //Create string with RTF header
+    QString str("{\\rtf\\ansi\\deff0{\\fonttbl{\\f0\\fswiss Arial;}{\\f1\\fmodern IDAutomationHC39M;}}{\\colortbl;\\red0\\green0\\blue0;\\red255\\green0\\blue0;\\red255\\green102\\blue0;\\red0\\green128\\blue0;\\red0\\green0\\blue255;\\red128\\green0\\blue128;}{\\stylesheet{\\s11\\ri144\\li144\\aspalpha\\aspnum\\qc\\f0\\b\\fs96 FirstName;}{\\s12\\ri144\\li144\\aspalpha\\aspnum\\qc\\f0\\b\\fs72 LastName;}{\\s13\\ri144\\li144\\aspalpha\\aspnum\\qc\\f0\\b\\sb120\\fs56 Job;}{\\s14\\ri144\\li144\\aspalpha\\aspnum\\qc\\f1\\fs18 Barcode;}{\\s21\\sbasedon13\\cf5\\ri144\\li144\\aspalpha\\aspnum\\qc\\f0\\b\\sb120\\fs56 Job: Judge;}{\\s22\\sbasedon13\\cf2\\ri144\\li144\\aspalpha\\aspnum\\qc\\f0\\b\\sb120\\fs56 Job: Referee;}{\\s23\\sbasedon13\\cf3\\ri144\\li144\\aspalpha\\aspnum\\qc\\f0\\b\\sb120\\fs56 Job: Robot Inspector;}{\\s24\\sbasedon13\\cf4\\ri144\\li144\\aspalpha\\aspnum\\qc\\f0\\b\\sb120\\fs56 Job: Safety;}{\\s25\\sbasedon13\\cf6\\ri144\\li144\\aspalpha\\aspnum\\qc\\f0\\b\\sb120\\fs56 Job: Staff;}}\\paperw12240\\paperh15840\\margl225\\margr225\\margt720\\margb0\\viewkind1");
 
-    xml_document<> doc;
-    QFile templateFile ("template.html");
-    if(templateFile.open(QFile::ReadWrite | QFile::Text))
-    {
-        QTextStream in(&templateFile);
-
-        char* templateText = db.allocate_string("", templateFile.size());
-        strcpy(templateText, in.readAll().toStdString().c_str());
-        doc.parse<0>(templateText);
-    }
-    else
-        return;
-
-    xml_node<> *body = doc.first_node("body");
-
-    QString nametags("<table><tbody>");
-    // Populate the table with nametags
-
+    //Populate the table with nametags
     for(QList<TeamMember>::iterator member = model->memberList.begin(); member != model->memberList.end(); member++)
     {
         //Start row
-        nametags.append("<tr><td class=\"name\">");
+        QString row("");
+        row.append("\\trowd\\irow0\\irowband0\\trgaph15\\trrh-2880\\trleft0\\trkeep\\trftsWidth1\\trpaddl15\\trpaddr15\\trpaddfl3\\trpaddfr3\\clvertalc \\cltxlrtb \\clbrdrt\\brdrtbl\\clbrdrl\\brdrtbl\\clbrdrb\\brdrtbl\\clbrdrr\\brdrtbl \\clshdrawnil \\clftsWidth3\\clwWidth5040\\cellx5040\\clvertalc \\cltxbtlr \\clbrdrt\\brdrtbl\\clbrdrl\\brdrtbl\\clbrdrb\\brdrtbl\\clbrdrr\\brdrtbl \\clshdrawnil \\clftsWidth3\\clwWidth720\\cellx5760\\clvertalc \\cltxlrtb \\clbrdrt\\brdrtbl\\clbrdrl\\brdrtbl\\clbrdrb\\brdrtbl\\clbrdrr\\brdrtbl \\clshdrawnil \\clftsWidth3\\clwWidth270\\cellx6030\\clvertalc \\cltxlrtb \\clbrdrt\\brdrtbl\\clbrdrl\\brdrtbl\\clbrdrb\\brdrtbl\\clbrdrr\\brdrtbl \\clshdrawnil \\clftsWidth3\\clwWidth5040\\cellx11070\\clvertalc \\cltxbtlr \\clbrdrt\\brdrtbl\\clbrdrl\\brdrtbl\\clbrdrb\\brdrtbl\\clbrdrr\\brdrtbl \\clshdrawnil \\clftsWidth3\\clwWidth720\\cellx11790");
 
         //First Column
-        nametags.append(member->name);
-        nametags.append("<br/>");
-        nametags.append(member->subteam);
-        nametags.append("</td><td class=\"barcode\">");
-        nametags.append(QString("*%1*").arg(member->uid, 8, 10, QChar('0')));
-        nametags.append("</td><td class=\"name\">");
+        row.append(QString("\\pard\\plain \\intbl \\s11\\ri144\\li144\\aspalpha\\aspnum\\qc\\f0\\b\\fs96 %1\\par\\pard\\plain \\intbl \\s12\\ri144\\li144\\aspalpha\\aspnum\\qc\\f0\\b\\fs72 %2\\par\\pard\\plain \\intbl \\s13\\ri144\\li144\\aspalpha\\aspnum\\qc\\f0\\b\\sb120\\fs56 %3\\cell\\pard\\plain \\intbl \\s14\\ri144\\li144\\aspalpha\\aspnum\\qc\\f1\\fs18 *%4*\\cell\\pard\\plain \\intbl \\cell").arg(member->fname).arg(member->lname).arg(member->subteam).arg(member->uid, 8, 10, QChar('0')));
 
         //Second Column
         member++;
-        if(member == model->memberList.end())
+        if(member == model->memberList.end()) //If there are an odd number of nametags, create a blank one in the right column and exit
         {
-            nametags.append("</td><td class=\"barcode\"></td></tr>");
+            row.append(QString("\\pard\\plain \\intbl \\s11\\ri144\\li144\\aspalpha\\aspnum\\qc\\f0\\b\\fs96 \\par\\pard\\plain \\intbl \\s12\\ri144\\li144\\aspalpha\\aspnum\\qc\\f0\\b\\fs72 \\par\\pard\\plain \\intbl \\s13\\\\ri144\\li144\\aspalpha\\aspnum\\qc\\f0\\b\\sb120\\fs56 \\cell\\pard\\plain \\intbl \\s14\\ri144\\li144\\aspalpha\\aspnum\\qc\\f1\\fs18 \\cell\\pard\\plain \\intbl \\trowd\\irow0\\irowband0\\trgaph15\\trrh-2880\\trleft0\\trkeep\\trftsWidth1\\trpaddl15\\trpaddr15\\trpaddfl3\\trpaddfr3\\clvertalc \\cltxlrtb \\clbrdrt\\brdrtbl\\clbrdrl\\brdrtbl\\clbrdrb\\brdrtbl\\clbrdrr\\brdrtbl \\clshdrawnil \\clftsWidth3\\clwWidth5040\\cellx5040\\clvertalc \\cltxbtlr \\clbrdrt\\brdrtbl\\clbrdrl\\brdrtbl\\clbrdrb\\brdrtbl\\clbrdrr\\brdrtbl \\clshdrawnil \\clftsWidth3\\clwWidth720\\cellx5760\\clvertalc \\cltxlrtb \\clbrdrt\\brdrtbl\\clbrdrl\\brdrtbl\\clbrdrb\\brdrtbl\\clbrdrr\\brdrtbl \\clshdrawnil \\clftsWidth3\\clwWidth270\\cellx6030\\clvertalc \\cltxlrtb \\clbrdrt\\brdrtbl\\clbrdrl\\brdrtbl\\clbrdrb\\brdrtbl\\clbrdrr\\brdrtbl \\clshdrawnil \\clftsWidth3\\clwWidth5040\\cellx11070\\clvertalc \\cltxbtlr \\clbrdrt\\brdrtbl\\clbrdrl\\brdrtbl\\clbrdrb\\brdrtbl\\clbrdrr\\brdrtbl \\clshdrawnil \\clftsWidth3\\clwWidth720\\cellx11790\\row"));
+            str.append(row);
+            //End row
             break;
         }
-        nametags.append(member->name);
-        nametags.append("<br/>");
-        nametags.append(member->subteam);
-        nametags.append("</td><td class=\"barcode\">");
-        nametags.append(QString("*%1*").arg(member->uid, 8, 10, QChar('0')));
-        nametags.append("</td>");
-
-        nametags.append("</tr>");
+        row.append(QString("\\pard\\plain \\intbl \\s11\\ri144\\li144\\aspalpha\\aspnum\\qc\\f0\\b\\fs96 %1\\par\\pard\\plain \\intbl \\s12\\ri144\\li144\\aspalpha\\aspnum\\qc\\f0\\b\\fs72 %2\\par\\pard\\plain \\intbl \\s135\\ri144\\li144\\aspalpha\\aspnum\\qc\\f0\\b\\sb120\\fs56 %3\\cell\\pard\\plain \\intbl \\s14\\ri144\\li144\\aspalpha\\aspnum\\qc\\f1\\fs18 *%4*\\cell\\pard\\plain \\intbl \\trowd\\irow0\\irowband0\\trgaph15\\trrh-2880\\trleft0\\trkeep\\trftsWidth1\\trpaddl15\\trpaddr15\\trpaddfl3\\trpaddfr3\\clvertalc \\cltxlrtb \\clbrdrt\\brdrtbl\\clbrdrl\\brdrtbl\\clbrdrb\\brdrtbl\\clbrdrr\\brdrtbl \\clshdrawnil \\clftsWidth3\\clwWidth5040\\cellx5040\\clvertalc \\cltxbtlr \\clbrdrt\\brdrtbl\\clbrdrl\\brdrtbl\\clbrdrb\\brdrtbl\\clbrdrr\\brdrtbl \\clshdrawnil \\clftsWidth3\\clwWidth720\\cellx5760\\clvertalc \\cltxlrtb \\clbrdrt\\brdrtbl\\clbrdrl\\brdrtbl\\clbrdrb\\brdrtbl\\clbrdrr\\brdrtbl \\clshdrawnil \\clftsWidth3\\clwWidth270\\cellx6030\\clvertalc \\cltxlrtb \\clbrdrt\\brdrtbl\\clbrdrl\\brdrtbl\\clbrdrb\\brdrtbl\\clbrdrr\\brdrtbl \\clshdrawnil \\clftsWidth3\\clwWidth5040\\cellx11070\\clvertalc \\cltxbtlr \\clbrdrt\\brdrtbl\\clbrdrl\\brdrtbl\\clbrdrb\\brdrtbl\\clbrdrr\\brdrtbl \\clshdrawnil \\clftsWidth3\\clwWidth720\\cellx11790\\row").arg(member->fname).arg(member->lname).arg(member->subteam).arg(member->uid, 8, 10, QChar('0')));
+        str.append(row);
         //End row
     }
     // End the table
-    nametags.append("</tbody></table>");
 
-    qDebug() << nametags;
-
-    rapidxml::xml_document<> tableData;
-    char* parse_data = doc.allocate_string(nametags.toStdString().c_str());
-    tableData.parse<0>(parse_data);
-    rapidxml::xml_node<> *clone = doc.clone_node(tableData.first_node());
-    doc.first_node()->first_node()->append_node(clone);
-
-    std::string s;
-    rapidxml::print(std::back_inserter(s), doc);
-    QString str(s.c_str());
-    str.replace("&quot;", "\"");
-    s = str.toStdString();
-    QString exportFileName = QFileDialog::getSaveFileName(this, QString(), QString(), tr("HTML Files (*.html)"));
+    //Append RTF "footer"
+    str.append("}");
+    QString exportFileName = QFileDialog::getSaveFileName(this, QString(), QString(), tr("Rich Text Files (*.rtf)"));
     QFile exportFile (exportFileName);
     if(exportFile.open(QFile::ReadWrite | QFile::Text))
     {
         exportFile.resize(0);
-        exportFile.write(s.c_str());
+        exportFile.write(str.toLocal8Bit());
     }
 }
 
@@ -322,9 +281,7 @@ void MainWindow::finishRegister(TeamMember member)
     db.first_node()->first_node()->append_node(clone);
 
     //Display new member in member list
-    QVariant temp;
-    temp.setValue(member);
-    model->setData(model->index(model->rowCount()-1), temp);
+    model->memberList.append(member);
     model->refresh();
 }
 
@@ -334,7 +291,7 @@ void MainWindow::openMemberView(QModelIndex index)
         return;
     TeamMember member = qvariant_cast<TeamMember>(model->data(index, 6));
 
-    ui->name->setText(member.name);
+    ui->name->setText(member.fname + " " + member.lname);
     ui->grade->setText(((member.grade == 13) ? "Mentor":QString("%1th Grade").arg(member.grade)));
     ui->team->setText(member.subteam);
     ui->email->setText(member.email);

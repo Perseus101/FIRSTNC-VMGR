@@ -25,7 +25,7 @@ QVariant TeamMemberListModel::data(const QModelIndex &index, int role) const
     {
     case Qt::DisplayRole:
     {
-        return QVariant(memberList.at(index.row()).name);
+        return QVariant(memberList.at(index.row()).fname + " " + memberList.at(index.row()).lname);
     }
         break;
     case 6:
@@ -50,6 +50,8 @@ bool TeamMemberListModel::setData(const QModelIndex &index, const QVariant &valu
 {
     if(role == Qt::EditRole && index.isValid())
     {
+        if(memberList.size() < index.row())
+            memberList.reserve(index.row());
         memberList.replace(index.row(), qvariant_cast<TeamMember>(value));
         emit dataChanged(index,index);
         return true;
