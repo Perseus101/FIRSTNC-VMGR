@@ -1,0 +1,232 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Register</class>
+ <widget class="QWidget" name="Register">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>400</width>
+    <height>300</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <widget class="QPushButton" name="registerButton">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>170</y>
+     <width>80</width>
+     <height>22</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Register</string>
+   </property>
+  </widget>
+  <widget class="QWidget" name="layoutWidget">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>12</y>
+     <width>314</width>
+     <height>152</height>
+    </rect>
+   </property>
+   <layout class="QVBoxLayout" name="verticalLayout_7">
+    <item>
+     <layout class="QHBoxLayout" name="horizontalLayout">
+      <item>
+       <layout class="QVBoxLayout" name="verticalLayout">
+        <item>
+         <widget class="QLabel" name="label">
+          <property name="text">
+           <string>First Name</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="firstName">
+          <property name="minimumSize">
+           <size>
+            <width>150</width>
+            <height>22</height>
+           </size>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <layout class="QVBoxLayout" name="verticalLayout_2">
+        <item>
+         <widget class="QLabel" name="label_2">
+          <property name="text">
+           <string>Last Name</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="lastName">
+          <property name="minimumSize">
+           <size>
+            <width>150</width>
+            <height>22</height>
+           </size>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </item>
+    <item>
+     <layout class="QHBoxLayout" name="horizontalLayout_3">
+      <item>
+       <layout class="QVBoxLayout" name="verticalLayout_5">
+        <item>
+         <widget class="QLabel" name="label_5">
+          <property name="text">
+           <string>Your Email</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="personalEmail">
+          <property name="minimumSize">
+           <size>
+            <width>150</width>
+            <height>22</height>
+           </size>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <layout class="QVBoxLayout" name="verticalLayout_6">
+        <item>
+         <widget class="QLabel" name="label_6">
+          <property name="text">
+           <string>Parent's Email</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="parentEmail">
+          <property name="minimumSize">
+           <size>
+            <width>150</width>
+            <height>22</height>
+           </size>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </item>
+    <item>
+     <layout class="QHBoxLayout" name="horizontalLayout_2">
+      <item>
+       <layout class="QVBoxLayout" name="verticalLayout_3">
+        <item>
+         <widget class="QLabel" name="label_3">
+          <property name="text">
+           <string>Primary Sub-Team</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QComboBox" name="team">
+          <property name="minimumSize">
+           <size>
+            <width>150</width>
+            <height>22</height>
+           </size>
+          </property>
+          <item>
+           <property name="text">
+            <string>Build Team</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Programming Team</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Electrical Team</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>CAD Team</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Imagery Team</string>
+           </property>
+          </item>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <layout class="QVBoxLayout" name="verticalLayout_4">
+        <item>
+         <widget class="QLabel" name="label_4">
+          <property name="text">
+           <string>Grade</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QComboBox" name="grade">
+          <property name="minimumSize">
+           <size>
+            <width>150</width>
+            <height>22</height>
+           </size>
+          </property>
+          <item>
+           <property name="text">
+            <string extracomment="asdf">9th Grade</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>10th Grade</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>11th Grade</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>12th Grade</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Mentor</string>
+           </property>
+          </item>
+         </widget>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </item>
+   </layout>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
