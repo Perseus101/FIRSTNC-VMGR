@@ -14,12 +14,13 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionOpen_2, SIGNAL(triggered(bool)), this, SLOT(openData()));
     connect(ui->actionSave_2, SIGNAL(triggered(bool)), this, SLOT(saveData()));
     connect(ui->actionExport_Nametags, SIGNAL(triggered(bool)), this, SLOT(exportData()));
+    connect(ui->actionImport, SIGNAL(triggered(bool)), this, SLOT(importData()));
     connect(ui->actionRegister, SIGNAL(triggered(bool)), this, SLOT(beginRegister()));
     connect(ui->actionRegister, SIGNAL(triggered(bool)), &reg, SLOT(show()));
     connect(ui->signIn, SIGNAL(clicked(bool)), this, SLOT(signIn()));
     connect(ui->signOut, SIGNAL(clicked(bool)), this, SLOT(signOut()));
     connect(ui->barcodeInput, SIGNAL(textChanged(QString)), this, SLOT(startBarcodeRead()));
-    connect(ui->nameList, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(openMemberView(QModelIndex)));
+    connect(ui->nameList, SIGNAL(clicked(QModelIndex)), this, SLOT(openMemberView(QModelIndex)));
 
     connect(&reg, SIGNAL(registered(TeamMember)), this, SLOT(finishRegister(TeamMember)));
 
@@ -187,7 +188,6 @@ void MainWindow::openData(QString filename)
 
         nextUid = atoi(team_members_node->first_node("uid")->value());
 
-        QVariant var;
         int i = 0;
         for (xml_node<> *member_data = team_members_node->first_node(); member_data; member_data = member_data->next_sibling())
             i++;
@@ -195,14 +195,15 @@ void MainWindow::openData(QString filename)
         if(i != 0)
             model->insertRows(0, i-1);
 
+        QVariant var;
         i = 0;
         for (xml_node<> *member_data = team_members_node->first_node("member"); member_data; member_data = member_data->next_sibling(), i++)
         {
             TeamMember temp(member_data->first_attribute("fname")->value(), member_data->first_attribute("lname")->value(), atoi(member_data->first_attribute("uid")->value()));
             temp.email = member_data->first_attribute("eml")->value();
-            temp.parentEmail = member_data->first_attribute("peml")->value();
-            temp.subteam = member_data->first_attribute("team")->value();
-            temp.grade = atoi(member_data->first_attribute("grade")->value());
+            temp.phone = member_data->first_attribute("phone")->value();
+            temp.job = member_data->first_attribute("job")->value();
+            temp.age = atoi(member_data->first_attribute("age")->value());
 
             var.setValue(temp);
             model->setData(model->index(i), var);
@@ -234,7 +235,7 @@ void MainWindow::exportData()
         row.append("\\trowd\\irow0\\irowband0\\trgaph15\\trrh-2880\\trleft0\\trkeep\\trftsWidth1\\trpaddl15\\trpaddr15\\trpaddfl3\\trpaddfr3\\clvertalc \\cltxlrtb \\clbrdrt\\brdrtbl\\clbrdrl\\brdrtbl\\clbrdrb\\brdrtbl\\clbrdrr\\brdrtbl \\clshdrawnil \\clftsWidth3\\clwWidth5040\\cellx5040\\clvertalc \\cltxbtlr \\clbrdrt\\brdrtbl\\clbrdrl\\brdrtbl\\clbrdrb\\brdrtbl\\clbrdrr\\brdrtbl \\clshdrawnil \\clftsWidth3\\clwWidth720\\cellx5760\\clvertalc \\cltxlrtb \\clbrdrt\\brdrtbl\\clbrdrl\\brdrtbl\\clbrdrb\\brdrtbl\\clbrdrr\\brdrtbl \\clshdrawnil \\clftsWidth3\\clwWidth270\\cellx6030\\clvertalc \\cltxlrtb \\clbrdrt\\brdrtbl\\clbrdrl\\brdrtbl\\clbrdrb\\brdrtbl\\clbrdrr\\brdrtbl \\clshdrawnil \\clftsWidth3\\clwWidth5040\\cellx11070\\clvertalc \\cltxbtlr \\clbrdrt\\brdrtbl\\clbrdrl\\brdrtbl\\clbrdrb\\brdrtbl\\clbrdrr\\brdrtbl \\clshdrawnil \\clftsWidth3\\clwWidth720\\cellx11790");
 
         //First Column
-        row.append(QString("\\pard\\plain \\intbl \\s11\\ri144\\li144\\aspalpha\\aspnum\\qc\\f0\\b\\fs96 %1\\par\\pard\\plain \\intbl \\s12\\ri144\\li144\\aspalpha\\aspnum\\qc\\f0\\b\\fs72 %2\\par\\pard\\plain \\intbl \\s13\\ri144\\li144\\aspalpha\\aspnum\\qc\\f0\\b\\sb120\\fs56 %3\\cell\\pard\\plain \\intbl \\s14\\ri144\\li144\\aspalpha\\aspnum\\qc\\f1\\fs18 *%4*\\cell\\pard\\plain \\intbl \\cell").arg(member->fname).arg(member->lname).arg(member->subteam).arg(member->uid, 8, 10, QChar('0')));
+        row.append(QString("\\pard\\plain \\intbl \\s11\\ri144\\li144\\aspalpha\\aspnum\\qc\\f0\\b\\fs96 %1\\par\\pard\\plain \\intbl \\s12\\ri144\\li144\\aspalpha\\aspnum\\qc\\f0\\b\\fs72 %2\\par\\pard\\plain \\intbl \\s13\\ri144\\li144\\aspalpha\\aspnum\\qc\\f0\\b\\sb120\\fs56 %3\\cell\\pard\\plain \\intbl \\s14\\ri144\\li144\\aspalpha\\aspnum\\qc\\f1\\fs18 *%4*\\cell\\pard\\plain \\intbl \\cell").arg(member->fname).arg(member->lname).arg(member->job).arg(member->uid, 8, 10, QChar('0')));
 
         //Second Column
         member++;
@@ -245,7 +246,7 @@ void MainWindow::exportData()
             //End row
             break;
         }
-        row.append(QString("\\pard\\plain \\intbl \\s11\\ri144\\li144\\aspalpha\\aspnum\\qc\\f0\\b\\fs96 %1\\par\\pard\\plain \\intbl \\s12\\ri144\\li144\\aspalpha\\aspnum\\qc\\f0\\b\\fs72 %2\\par\\pard\\plain \\intbl \\s135\\ri144\\li144\\aspalpha\\aspnum\\qc\\f0\\b\\sb120\\fs56 %3\\cell\\pard\\plain \\intbl \\s14\\ri144\\li144\\aspalpha\\aspnum\\qc\\f1\\fs18 *%4*\\cell\\pard\\plain \\intbl \\trowd\\irow0\\irowband0\\trgaph15\\trrh-2880\\trleft0\\trkeep\\trftsWidth1\\trpaddl15\\trpaddr15\\trpaddfl3\\trpaddfr3\\clvertalc \\cltxlrtb \\clbrdrt\\brdrtbl\\clbrdrl\\brdrtbl\\clbrdrb\\brdrtbl\\clbrdrr\\brdrtbl \\clshdrawnil \\clftsWidth3\\clwWidth5040\\cellx5040\\clvertalc \\cltxbtlr \\clbrdrt\\brdrtbl\\clbrdrl\\brdrtbl\\clbrdrb\\brdrtbl\\clbrdrr\\brdrtbl \\clshdrawnil \\clftsWidth3\\clwWidth720\\cellx5760\\clvertalc \\cltxlrtb \\clbrdrt\\brdrtbl\\clbrdrl\\brdrtbl\\clbrdrb\\brdrtbl\\clbrdrr\\brdrtbl \\clshdrawnil \\clftsWidth3\\clwWidth270\\cellx6030\\clvertalc \\cltxlrtb \\clbrdrt\\brdrtbl\\clbrdrl\\brdrtbl\\clbrdrb\\brdrtbl\\clbrdrr\\brdrtbl \\clshdrawnil \\clftsWidth3\\clwWidth5040\\cellx11070\\clvertalc \\cltxbtlr \\clbrdrt\\brdrtbl\\clbrdrl\\brdrtbl\\clbrdrb\\brdrtbl\\clbrdrr\\brdrtbl \\clshdrawnil \\clftsWidth3\\clwWidth720\\cellx11790\\row").arg(member->fname).arg(member->lname).arg(member->subteam).arg(member->uid, 8, 10, QChar('0')));
+        row.append(QString("\\pard\\plain \\intbl \\s11\\ri144\\li144\\aspalpha\\aspnum\\qc\\f0\\b\\fs96 %1\\par\\pard\\plain \\intbl \\s12\\ri144\\li144\\aspalpha\\aspnum\\qc\\f0\\b\\fs72 %2\\par\\pard\\plain \\intbl \\s135\\ri144\\li144\\aspalpha\\aspnum\\qc\\f0\\b\\sb120\\fs56 %3\\cell\\pard\\plain \\intbl \\s14\\ri144\\li144\\aspalpha\\aspnum\\qc\\f1\\fs18 *%4*\\cell\\pard\\plain \\intbl \\trowd\\irow0\\irowband0\\trgaph15\\trrh-2880\\trleft0\\trkeep\\trftsWidth1\\trpaddl15\\trpaddr15\\trpaddfl3\\trpaddfr3\\clvertalc \\cltxlrtb \\clbrdrt\\brdrtbl\\clbrdrl\\brdrtbl\\clbrdrb\\brdrtbl\\clbrdrr\\brdrtbl \\clshdrawnil \\clftsWidth3\\clwWidth5040\\cellx5040\\clvertalc \\cltxbtlr \\clbrdrt\\brdrtbl\\clbrdrl\\brdrtbl\\clbrdrb\\brdrtbl\\clbrdrr\\brdrtbl \\clshdrawnil \\clftsWidth3\\clwWidth720\\cellx5760\\clvertalc \\cltxlrtb \\clbrdrt\\brdrtbl\\clbrdrl\\brdrtbl\\clbrdrb\\brdrtbl\\clbrdrr\\brdrtbl \\clshdrawnil \\clftsWidth3\\clwWidth270\\cellx6030\\clvertalc \\cltxlrtb \\clbrdrt\\brdrtbl\\clbrdrl\\brdrtbl\\clbrdrb\\brdrtbl\\clbrdrr\\brdrtbl \\clshdrawnil \\clftsWidth3\\clwWidth5040\\cellx11070\\clvertalc \\cltxbtlr \\clbrdrt\\brdrtbl\\clbrdrl\\brdrtbl\\clbrdrb\\brdrtbl\\clbrdrr\\brdrtbl \\clshdrawnil \\clftsWidth3\\clwWidth720\\cellx11790\\row").arg(member->fname).arg(member->lname).arg(member->job).arg(member->uid, 8, 10, QChar('0')));
         str.append(row);
         //End row
     }
@@ -259,6 +260,41 @@ void MainWindow::exportData()
     {
         exportFile.resize(0);
         exportFile.write(str.toLocal8Bit());
+    }
+}
+
+void MainWindow::importData()
+{
+    if(!newData()) //Clear out the old data
+        return;
+    QXlsx::Document data(QFileDialog::getOpenFileName(this, QString(), QString(), tr("Excel Spreadsheet (*.xlsx)")));
+    QString temp("");
+    int i = 10; // The first row of data is row 10
+    while((temp = data.read(i,1).toString()) != QString("")) // Count the number of rows with first name values
+        i++;
+    nextUid = i-10;
+
+    if(i != 10)
+        model->insertRows(0, i-10);
+
+    QVariant var;
+    for (i = 10; i < nextUid+10; i++)
+    {
+        TeamMember temp(data.read(i,1).toString(), data.read(i,2).toString());
+        temp.phone = data.read(i,3).toString();
+        temp.email = data.read(i,4).toString();
+        temp.age = data.read(i,5).toInt();
+        temp.job = data.read(i, 9).toString();
+        temp.comments = data.read(i, 11).toString();
+        //Insert the member into the database
+        rapidxml::xml_document<> member_data;
+        char* parse_data = db.allocate_string(temp.getXML().toStdString().c_str());
+        member_data.parse<0>(parse_data);
+        rapidxml::xml_node<> *clone = db.clone_node(member_data.first_node());
+        db.first_node()->first_node()->append_node(clone);
+        //Insert the member into the table
+        var.setValue(temp);
+        model->setData(model->index(i-10), var);
     }
 }
 
@@ -292,10 +328,10 @@ void MainWindow::openMemberView(QModelIndex index)
     TeamMember member = qvariant_cast<TeamMember>(model->data(index, 6));
 
     ui->name->setText(member.fname + " " + member.lname);
-    ui->grade->setText(((member.grade == 13) ? "Mentor":QString("%1th Grade").arg(member.grade)));
-    ui->team->setText(member.subteam);
+    ui->grade->setText(QString("%1").arg(member.age));
+    ui->team->setText(member.job);
     ui->email->setText(member.email);
-    ui->parentEmail->setText(member.parentEmail);
+    ui->parentEmail->setText(member.phone);
 
     if(member.in_time.isValid())
     {

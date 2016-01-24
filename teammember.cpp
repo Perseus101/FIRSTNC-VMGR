@@ -23,7 +23,7 @@ TeamMember::~TeamMember()
 
 QString TeamMember::getXML()
 {
-    return QString("<member fname=\"%1\" lname=\"%2\" eml=\"%3\" peml=\"%4\" team=\"%5\" grade=\"%6\" uid=\"%7\"></member>")
-            .arg(fname, lname, email, parentEmail, subteam)
-            .arg(grade).arg(uid);
+    return QString("<member fname=\"%1\" lname=\"%2\" eml=\"%3\" phone=\"%4\" job=\"%5\" age=\"%6\" uid=\"%7\"></member>")
+            .arg(fname, lname, email, phone, job)
+            .arg(age).arg(uid);
 }

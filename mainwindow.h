@@ -20,7 +20,7 @@
 #include "rapidxml/rapidxml_utils.hpp"
 #include "rapidxml/rapidxml_print.hpp"
 
-
+#include "xlsxdocument.h"
 
 namespace Ui {
 class MainWindow;
@@ -43,6 +43,7 @@ private slots:
     void openData(QString);
     void saveData();
     void exportData();
+    void importData();
 
     void beginRegister();
     void finishRegister(TeamMember);
