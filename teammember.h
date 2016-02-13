@@ -5,8 +5,15 @@
 #include <QString>
 #include <QStringList>
 #include <QDateTime>
+#include <QMap>
 
 #include <QDebug>
+
+struct Job
+{
+    QString Name;
+    bool present;
+};
 
 class TeamMember
 {
@@ -16,11 +23,10 @@ public:
     TeamMember(QString, QString, int);
     ~TeamMember();
 
-    QString getXML();
+    QString getXML() const;
 
     QString fname, lname, job, email, phone, comments;
-    int age, uid;
-    QDateTime in_time,out_time;
+    int uid;
 
 };
 

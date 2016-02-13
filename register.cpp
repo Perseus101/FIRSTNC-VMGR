@@ -19,7 +19,7 @@ Register::~Register()
 void Register::registerFinished()
 {
     TeamMember temp(ui->firstName->text(), ui->lastName->text());
-    temp.age = 0; //TODO
+    //temp.age = 0; //TODO
 
     temp.job = ui->team->currentText();
     temp.email = ui->personalEmail->text();

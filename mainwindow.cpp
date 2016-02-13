@@ -17,8 +17,6 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionImport, SIGNAL(triggered(bool)), this, SLOT(importData()));
     connect(ui->actionRegister, SIGNAL(triggered(bool)), this, SLOT(beginRegister()));
     connect(ui->actionRegister, SIGNAL(triggered(bool)), &reg, SLOT(show()));
-    connect(ui->signIn, SIGNAL(clicked(bool)), this, SLOT(signIn()));
-    connect(ui->signOut, SIGNAL(clicked(bool)), this, SLOT(signOut()));
     connect(ui->barcodeInput, SIGNAL(textChanged(QString)), this, SLOT(startBarcodeRead()));
     connect(ui->nameList, SIGNAL(clicked(QModelIndex)), this, SLOT(openMemberView(QModelIndex)));
 
@@ -62,58 +60,26 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
+void MainWindow::closeEvent(QCloseEvent *event)
+{
+    saveDatabase("database.db");
+}
+
 void MainWindow::saveDatabase(QString filename)
 {
     using namespace rapidxml;
-    char* nextUidString = db.allocate_string("", 8);
-    sprintf(nextUidString, "%d", nextUid);
-    db.first_node()->first_node("teammembers")->first_node("uid")->value(nextUidString);
 
-    xml_node<> *root_node = db.first_node();
-    xml_node<> *team_members_node = root_node->first_node("teammembers");
-
-    //Save the in time and out time of each member who logged in at the event
-    int i = 0;
-    for (xml_node<> *member_data = team_members_node->first_node("member"); member_data; member_data = member_data->next_sibling(), i++)
-    {
-        //Build the element to be inserted
-        if(model->memberList.at(i).in_time.isValid())
-        {
-            QString insertDataString = QString("<event name=\"%1\" date=\"%2\" inTime=\"%3\" outTime=\"%4\"/>")
-                    .arg("Regular Meeting").arg(QDate::currentDate().toString("MM-dd-yyyy"))
-                    .arg(model->memberList.at(i).in_time.toString("hh:mm:ss"))
-                    .arg(model->memberList.at(i).out_time.isValid()?
-                             model->memberList.at(i).out_time.toString("hh:mm:ss"):
-                             QDateTime::currentDateTime().toString("hh:mm:ss"));
-
-            // Parse the data and insert it into the database
-            rapidxml::xml_document<> insertData;
-            char* parse_data = db.allocate_string(insertDataString.toStdString().c_str());
-            insertData.parse<0>(parse_data);
-            rapidxml::xml_node<> *clone = db.clone_node(insertData.first_node());
-            member_data->append_node(clone);
-        }
-        else
-        {
-            // Member didn't sign in
-            continue;
-        }
-    }
-
+    //Print the contents of the database into the string
     std::string s;
     rapidxml::print(std::back_inserter(s), db);
 
+    //Write the string containing the database to the given file.
     QFile db_file(filename);
     if(db_file.open(QFile::ReadWrite | QFile::Text))
     {
         db_file.resize(0);
         db_file.write(s.c_str());
     }
-}
-
-void MainWindow::closeEvent(QCloseEvent *event)
-{
-    saveDatabase("database.db");
 }
 
 bool MainWindow::newData()
@@ -140,12 +106,18 @@ bool MainWindow::newData()
     {
         QFile::remove("database.db");
         QFile::copy("db_template.xml", "database.db");
+        //Clear out all currently loaded data
+        model->memberList.clear();
+        //Load the now blank database
+        openData("database.db");
+        return true;
     }
-    // Purge all members that were loaded into the model
-    model->memberList.clear();
-    // Clear out the member view
-    closeMemberView();
-    return true;
+    else
+    {
+        //Database template cannot be found; crash
+        //TODO something other than crash
+        exit(-1);
+    }
 }
 
 void MainWindow::openData()
@@ -203,7 +175,7 @@ void MainWindow::openData(QString filename)
             temp.email = member_data->first_attribute("eml")->value();
             temp.phone = member_data->first_attribute("phone")->value();
             temp.job = member_data->first_attribute("job")->value();
-            temp.age = atoi(member_data->first_attribute("age")->value());
+            temp.comments = member_data->first_attribute("comments")->value();
 
             var.setValue(temp);
             model->setData(model->index(i), var);
@@ -269,33 +241,38 @@ void MainWindow::importData()
         return;
     QXlsx::Document data(QFileDialog::getOpenFileName(this, QString(), QString(), tr("Excel Spreadsheet (*.xlsx)")));
     QString temp("");
-    int i = 10; // The first row of data is row 10
-    while((temp = data.read(i,1).toString()) != QString("")) // Count the number of rows with first name values
-        i++;
-    nextUid = i-10;
-
-    if(i != 10)
-        model->insertRows(0, i-10);
-
-    QVariant var;
-    for (i = 10; i < nextUid+10; i++)
+    int i = 13; // The first row of data is row 13
+    while((temp = data.read(i,2).toString()) != QString("")) // Iterate through all the rows with first name values
     {
-        TeamMember temp(data.read(i,1).toString(), data.read(i,2).toString());
-        temp.phone = data.read(i,3).toString();
-        temp.email = data.read(i,4).toString();
-        temp.age = data.read(i,5).toInt();
-        temp.job = data.read(i, 9).toString();
-        temp.comments = data.read(i, 11).toString();
-        //Insert the member into the database
+        qDebug() << data.read(i,2).toString();
+        TeamMember temp(data.read(i, 2).toString(), data.read(i, 3).toString());
+        temp.email = data.read(i, 4).toString();
+        temp.phone = data.read(i, 5).toString();
+        //Build comments section
+        if(data.read(i, 1).toString() == QString("Minor"))
+            temp.comments.append("***Minor***\n");
+        if(data.read(i, 10).toString() != QString("Passed"))
+            temp.comments.append("***Not Screened***\n");
+        if(data.read(i, 11).toString() != QString("Passed"))
+            temp.comments.append("***Not Certified***\n");
+        temp.comments.append(data.read(i, 12).toString() + "\n"); //Physical Limitations
+        temp.comments.append("Shirt Size: " + data.read(i, 13).toString() + "\n"); //Shirt Size
+        temp.comments.append("Team Affiliation: " + data.read(i, 14).toString() + "\n"); //Team
+        //Role is column 6, Day is column 7
+
+        //Append the volunteer to the UI
+        model->memberList.append(temp);
+
+        //Apend the volunteer to the database
         rapidxml::xml_document<> member_data;
         char* parse_data = db.allocate_string(temp.getXML().toStdString().c_str());
         member_data.parse<0>(parse_data);
         rapidxml::xml_node<> *clone = db.clone_node(member_data.first_node());
         db.first_node()->first_node()->append_node(clone);
-        //Insert the member into the table
-        var.setValue(temp);
-        model->setData(model->index(i-10), var);
+
+        i++;
     }
+    model->refresh();
 }
 
 void MainWindow::beginRegister()
@@ -328,47 +305,20 @@ void MainWindow::openMemberView(QModelIndex index)
     TeamMember member = qvariant_cast<TeamMember>(model->data(index, 6));
 
     ui->name->setText(member.fname + " " + member.lname);
-    ui->grade->setText(QString("%1").arg(member.age));
-    ui->team->setText(member.job);
     ui->email->setText(member.email);
-    ui->parentEmail->setText(member.phone);
+    ui->phone->setText(member.phone);
+    ui->comments->clear();
+    ui->comments->appendPlainText(member.comments);
 
-    if(member.in_time.isValid())
-    {
-        ui->inTime->setText(QString("Signed in at %1").arg(member.in_time.toString("hh:mm:ss")));
-        ui->signIn->setDisabled(true);
-    }
-    else
-    {
-        ui->inTime->setText(QString(""));
-        ui->signIn->setDisabled(false);
-    }
-    if(member.out_time.isValid())
-    {
-        ui->outTime->setText(QString("Signed out at %1").arg(member.out_time.toString("hh:mm:ss")));
-        ui->signOut->setDisabled(true);
-    }
-    else
-    {
-        ui->outTime->setText(QString(""));
-        ui->signOut->setDisabled(false);
-    }
     selectedMember = index;
 }
 
 void MainWindow::closeMemberView()
 {
     ui->name->setText("");
-    ui->grade->setText("");
-    ui->team->setText("");
     ui->email->setText("");
-    ui->parentEmail->setText("");
-
-    ui->inTime->setText(QString(""));
-    ui->outTime->setText(QString(""));
-
-    ui->signIn->setDisabled(false);
-    ui->signOut->setDisabled(false);
+    ui->phone->setText("");
+    ui->comments->clear();
 
     selectedMember = model->index(-1);
 }
@@ -396,8 +346,8 @@ void MainWindow::endBarcodeRead()
             if(it->uid == searchUid)
                 openMemberView(model->index(i));
         }
-        if(!(model->memberList.at(selectedMember.row()).in_time.isValid()))
-            signIn();
+//        if(!(model->memberList.at(selectedMember.row()).in_time.isValid()))
+//            signIn();
     }
     ui->barcodeInput->setText(QString(""));
     readingBarcode = false;
@@ -408,12 +358,8 @@ void MainWindow::signIn()
     if(selectedMember.isValid())
     {
         TeamMember temp = model->memberList.at(selectedMember.row());
-        temp.in_time = QDateTime::currentDateTime();
+        //temp.in_time = QDateTime::currentDateTime();
         model->memberList.replace(selectedMember.row(), temp);
-        ui->signIn->setDisabled(true);
-        ui->inTime->setText(QString("Signed in at %1").arg(model->memberList.at(selectedMember.row()).in_time.toString("hh:mm:ss")));
-
-        ui->inTimes->setItem(selectedMember.row(), 1, new QTableWidgetItem(model->memberList.at(selectedMember.row()).in_time.toString("hh:mm:ss")));
     }
 }
 
@@ -421,14 +367,10 @@ void MainWindow::signOut()
 {
     if(selectedMember.isValid())
     {
-        if(!(model->memberList.at(selectedMember.row()).in_time.isValid())) // User isn't signed in, therefore can't sign out.
-            return;
+//        if(!(model->memberList.at(selectedMember.row()).in_time.isValid())) // User isn't signed in, therefore can't sign out.
+//            return;
         TeamMember temp = model->memberList.at(selectedMember.row());
-        temp.out_time = QDateTime::currentDateTime();
+//        temp.out_time = QDateTime::currentDateTime();
         model->memberList.replace(selectedMember.row(), temp);
-        ui->signOut->setDisabled(true);
-        ui->outTime->setText(QString("Signed out at %1").arg(model->memberList.at(selectedMember.row()).out_time.toString("hh:mm:ss")));
-
-        ui->outTimes->setItem(selectedMember.row(), 1, new QTableWidgetItem(model->memberList.at(selectedMember.row()).out_time.toString("hh:mm:ss")));
     }
 }

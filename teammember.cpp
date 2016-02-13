@@ -21,9 +21,9 @@ TeamMember::~TeamMember()
 
 }
 
-QString TeamMember::getXML()
+QString TeamMember::getXML() const
 {
-    return QString("<member fname=\"%1\" lname=\"%2\" eml=\"%3\" phone=\"%4\" job=\"%5\" age=\"%6\" uid=\"%7\"></member>")
-            .arg(fname, lname, email, phone, job)
-            .arg(age).arg(uid);
+    return QString("<member fname=\"%1\" lname=\"%2\" eml=\"%3\" phone=\"%4\" job=\"%5\" comments=\"%6\"uid=\"%7\"></member>")
+            .arg(fname, lname, email, phone, job, comments)
+            .arg(uid);
 }

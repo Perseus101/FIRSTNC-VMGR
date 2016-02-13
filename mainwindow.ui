@@ -10,6 +10,12 @@
     <height>600</height>
    </rect>
   </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
+  </property>
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
@@ -69,14 +75,21 @@
            <widget class="QWidget" name="layoutWidget">
             <property name="geometry">
              <rect>
-              <x>1</x>
-              <y>1</y>
-              <width>541</width>
-              <height>251</height>
+              <x>32</x>
+              <y>12</y>
+              <width>494</width>
+              <height>131</height>
              </rect>
             </property>
-            <layout class="QVBoxLayout" name="verticalLayout">
-             <item>
+            <layout class="QGridLayout" name="gridLayout_2">
+             <item row="0" column="0">
+              <widget class="QLabel" name="label_2">
+               <property name="text">
+                <string>Name</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
               <widget class="QLabel" name="name">
                <property name="font">
                 <font>
@@ -88,31 +101,14 @@
                </property>
               </widget>
              </item>
-             <item>
-              <widget class="QLabel" name="grade">
-               <property name="font">
-                <font>
-                 <pointsize>24</pointsize>
-                </font>
-               </property>
+             <item row="1" column="0">
+              <widget class="QLabel" name="label_3">
                <property name="text">
-                <string/>
+                <string>Email</string>
                </property>
               </widget>
              </item>
-             <item>
-              <widget class="QLabel" name="team">
-               <property name="font">
-                <font>
-                 <pointsize>24</pointsize>
-                </font>
-               </property>
-               <property name="text">
-                <string/>
-               </property>
-              </widget>
-             </item>
-             <item>
+             <item row="1" column="1">
               <widget class="QLabel" name="email">
                <property name="font">
                 <font>
@@ -124,8 +120,15 @@
                </property>
               </widget>
              </item>
-             <item>
-              <widget class="QLabel" name="parentEmail">
+             <item row="2" column="0">
+              <widget class="QLabel" name="label_4">
+               <property name="text">
+                <string>Phone Number</string>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="1">
+              <widget class="QLabel" name="phone">
                <property name="font">
                 <font>
                  <pointsize>24</pointsize>
@@ -141,58 +144,22 @@
            <widget class="QWidget" name="layoutWidget">
             <property name="geometry">
              <rect>
-              <x>1</x>
-              <y>360</y>
-              <width>276</width>
-              <height>70</height>
+              <x>30</x>
+              <y>150</y>
+              <width>258</width>
+              <height>213</height>
              </rect>
             </property>
-            <layout class="QHBoxLayout" name="horizontalLayout_2">
+            <layout class="QVBoxLayout" name="verticalLayout">
              <item>
-              <layout class="QVBoxLayout" name="verticalLayout_3">
-               <item>
-                <widget class="QLabel" name="inTime">
-                 <property name="text">
-                  <string/>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QPushButton" name="signIn">
-                 <property name="font">
-                  <font>
-                   <pointsize>24</pointsize>
-                  </font>
-                 </property>
-                 <property name="text">
-                  <string>Sign In</string>
-                 </property>
-                </widget>
-               </item>
-              </layout>
+              <widget class="QLabel" name="label_5">
+               <property name="text">
+                <string>Notes</string>
+               </property>
+              </widget>
              </item>
              <item>
-              <layout class="QVBoxLayout" name="verticalLayout_4">
-               <item>
-                <widget class="QLabel" name="outTime">
-                 <property name="text">
-                  <string/>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QPushButton" name="signOut">
-                 <property name="font">
-                  <font>
-                   <pointsize>24</pointsize>
-                  </font>
-                 </property>
-                 <property name="text">
-                  <string>Sign Out</string>
-                 </property>
-                </widget>
-               </item>
-              </layout>
+              <widget class="QPlainTextEdit" name="comments"/>
              </item>
             </layout>
            </widget>
@@ -248,7 +215,7 @@
      <x>0</x>
      <y>0</y>
      <width>800</width>
-     <height>21</height>
+     <height>20</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
