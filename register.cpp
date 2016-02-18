@@ -21,7 +21,7 @@ void Register::registerFinished()
     TeamMember temp(ui->firstName->text(), ui->lastName->text());
     //temp.age = 0; //TODO
 
-    temp.job = ui->team->currentText();
+    temp.title = ui->team->currentText();
     temp.email = ui->personalEmail->text();
     temp.phone = ui->parentEmail->text();
     hide();

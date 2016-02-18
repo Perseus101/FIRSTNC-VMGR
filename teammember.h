@@ -9,9 +9,16 @@
 
 #include <QDebug>
 
-struct Job
+class Job
 {
-    QString Name;
+public:
+    Job(QString n, bool p)
+    {
+        name = n;
+        present = p;
+    }
+
+    QString name;
     bool present;
 };
 
@@ -25,7 +32,9 @@ public:
 
     QString getXML() const;
 
-    QString fname, lname, job, email, phone, comments;
+    QMap<QString, Job> jobs;
+
+    QString fname, lname, title, email, phone, comments;
     int uid;
 
 };

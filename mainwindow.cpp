@@ -35,23 +35,14 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->inTimes->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch); //Make the columns fill the whitespace
     ui->inTimes->verticalHeader()->setVisible(false);
 
-    ui->outTimes->setColumnCount(2);
-    ui->outTimes->setRowCount(model->memberList.size());
-    ui->outTimes->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch); //Make the columns fill the whitespace
-    ui->outTimes->verticalHeader()->setVisible(false);
-
     QStringList headers;
     headers << "Member" << "In Time";
     ui->inTimes->setHorizontalHeaderLabels(headers);
-    headers.replace(1, "Out Time");
-    ui->outTimes->setHorizontalHeaderLabels(headers);
 
     int i = 0;
     for(QList<TeamMember>::iterator it = model->memberList.begin(); it != model->memberList.end(); it++, i++)
     {
         ui->inTimes->setItem(i, 0, new QTableWidgetItem(it->fname + it->lname));
-
-        ui->outTimes->setItem(i, 0, new QTableWidgetItem(it->fname + it->lname));
     }
 }
 
@@ -63,23 +54,6 @@ MainWindow::~MainWindow()
 void MainWindow::closeEvent(QCloseEvent *event)
 {
     saveDatabase("database.db");
-}
-
-void MainWindow::saveDatabase(QString filename)
-{
-    using namespace rapidxml;
-
-    //Print the contents of the database into the string
-    std::string s;
-    rapidxml::print(std::back_inserter(s), db);
-
-    //Write the string containing the database to the given file.
-    QFile db_file(filename);
-    if(db_file.open(QFile::ReadWrite | QFile::Text))
-    {
-        db_file.resize(0);
-        db_file.write(s.c_str());
-    }
 }
 
 bool MainWindow::newData()
@@ -174,9 +148,13 @@ void MainWindow::openData(QString filename)
             TeamMember temp(member_data->first_attribute("fname")->value(), member_data->first_attribute("lname")->value(), atoi(member_data->first_attribute("uid")->value()));
             temp.email = member_data->first_attribute("eml")->value();
             temp.phone = member_data->first_attribute("phone")->value();
-            temp.job = member_data->first_attribute("job")->value();
+            temp.title = member_data->first_attribute("title")->value();
             temp.comments = member_data->first_attribute("comments")->value();
-
+            //Load Jobs
+            for (xml_node<> *job_node = member_data->first_node("job"); job_node; job_node = job_node->next_sibling())
+            {
+                temp.jobs.insert(QString(job_node->first_attribute("day")->value()), Job(job_node->first_attribute("name")->value(), bool(atoi(job_node->first_attribute("pres")->value()))));
+            }
             var.setValue(temp);
             model->setData(model->index(i), var);
         }
@@ -194,6 +172,23 @@ void MainWindow::saveData()
     saveDatabase(QFileDialog::getSaveFileName(this, QString(), QString(), filter, &filter));
 }
 
+void MainWindow::saveDatabase(QString filename)
+{
+    using namespace rapidxml;
+
+    //Print the contents of the database into the string
+    std::string s;
+    rapidxml::print(std::back_inserter(s), db);
+
+    //Write the string containing the database to the given file.
+    QFile db_file(filename);
+    if(db_file.open(QFile::ReadWrite | QFile::Text))
+    {
+        db_file.resize(0);
+        db_file.write(s.c_str());
+    }
+}
+
 void MainWindow::exportData()
 {
     //Create string with RTF header
@@ -207,7 +202,7 @@ void MainWindow::exportData()
         row.append("\\trowd\\irow0\\irowband0\\trgaph15\\trrh-2880\\trleft0\\trkeep\\trftsWidth1\\trpaddl15\\trpaddr15\\trpaddfl3\\trpaddfr3\\clvertalc \\cltxlrtb \\clbrdrt\\brdrtbl\\clbrdrl\\brdrtbl\\clbrdrb\\brdrtbl\\clbrdrr\\brdrtbl \\clshdrawnil \\clftsWidth3\\clwWidth5040\\cellx5040\\clvertalc \\cltxbtlr \\clbrdrt\\brdrtbl\\clbrdrl\\brdrtbl\\clbrdrb\\brdrtbl\\clbrdrr\\brdrtbl \\clshdrawnil \\clftsWidth3\\clwWidth720\\cellx5760\\clvertalc \\cltxlrtb \\clbrdrt\\brdrtbl\\clbrdrl\\brdrtbl\\clbrdrb\\brdrtbl\\clbrdrr\\brdrtbl \\clshdrawnil \\clftsWidth3\\clwWidth270\\cellx6030\\clvertalc \\cltxlrtb \\clbrdrt\\brdrtbl\\clbrdrl\\brdrtbl\\clbrdrb\\brdrtbl\\clbrdrr\\brdrtbl \\clshdrawnil \\clftsWidth3\\clwWidth5040\\cellx11070\\clvertalc \\cltxbtlr \\clbrdrt\\brdrtbl\\clbrdrl\\brdrtbl\\clbrdrb\\brdrtbl\\clbrdrr\\brdrtbl \\clshdrawnil \\clftsWidth3\\clwWidth720\\cellx11790");
 
         //First Column
-        row.append(QString("\\pard\\plain \\intbl \\s11\\ri144\\li144\\aspalpha\\aspnum\\qc\\f0\\b\\fs96 %1\\par\\pard\\plain \\intbl \\s12\\ri144\\li144\\aspalpha\\aspnum\\qc\\f0\\b\\fs72 %2\\par\\pard\\plain \\intbl \\s13\\ri144\\li144\\aspalpha\\aspnum\\qc\\f0\\b\\sb120\\fs56 %3\\cell\\pard\\plain \\intbl \\s14\\ri144\\li144\\aspalpha\\aspnum\\qc\\f1\\fs18 *%4*\\cell\\pard\\plain \\intbl \\cell").arg(member->fname).arg(member->lname).arg(member->job).arg(member->uid, 8, 10, QChar('0')));
+        row.append(QString("\\pard\\plain \\intbl \\s11\\ri144\\li144\\aspalpha\\aspnum\\qc\\f0\\b\\fs96 %1\\par\\pard\\plain \\intbl \\s12\\ri144\\li144\\aspalpha\\aspnum\\qc\\f0\\b\\fs72 %2\\par\\pard\\plain \\intbl \\s13\\ri144\\li144\\aspalpha\\aspnum\\qc\\f0\\b\\sb120\\fs56 %3\\cell\\pard\\plain \\intbl \\s14\\ri144\\li144\\aspalpha\\aspnum\\qc\\f1\\fs18 *%4*\\cell\\pard\\plain \\intbl \\cell").arg(member->fname).arg(member->lname).arg(member->title).arg(member->uid, 8, 10, QChar('0')));
 
         //Second Column
         member++;
@@ -218,7 +213,7 @@ void MainWindow::exportData()
             //End row
             break;
         }
-        row.append(QString("\\pard\\plain \\intbl \\s11\\ri144\\li144\\aspalpha\\aspnum\\qc\\f0\\b\\fs96 %1\\par\\pard\\plain \\intbl \\s12\\ri144\\li144\\aspalpha\\aspnum\\qc\\f0\\b\\fs72 %2\\par\\pard\\plain \\intbl \\s135\\ri144\\li144\\aspalpha\\aspnum\\qc\\f0\\b\\sb120\\fs56 %3\\cell\\pard\\plain \\intbl \\s14\\ri144\\li144\\aspalpha\\aspnum\\qc\\f1\\fs18 *%4*\\cell\\pard\\plain \\intbl \\trowd\\irow0\\irowband0\\trgaph15\\trrh-2880\\trleft0\\trkeep\\trftsWidth1\\trpaddl15\\trpaddr15\\trpaddfl3\\trpaddfr3\\clvertalc \\cltxlrtb \\clbrdrt\\brdrtbl\\clbrdrl\\brdrtbl\\clbrdrb\\brdrtbl\\clbrdrr\\brdrtbl \\clshdrawnil \\clftsWidth3\\clwWidth5040\\cellx5040\\clvertalc \\cltxbtlr \\clbrdrt\\brdrtbl\\clbrdrl\\brdrtbl\\clbrdrb\\brdrtbl\\clbrdrr\\brdrtbl \\clshdrawnil \\clftsWidth3\\clwWidth720\\cellx5760\\clvertalc \\cltxlrtb \\clbrdrt\\brdrtbl\\clbrdrl\\brdrtbl\\clbrdrb\\brdrtbl\\clbrdrr\\brdrtbl \\clshdrawnil \\clftsWidth3\\clwWidth270\\cellx6030\\clvertalc \\cltxlrtb \\clbrdrt\\brdrtbl\\clbrdrl\\brdrtbl\\clbrdrb\\brdrtbl\\clbrdrr\\brdrtbl \\clshdrawnil \\clftsWidth3\\clwWidth5040\\cellx11070\\clvertalc \\cltxbtlr \\clbrdrt\\brdrtbl\\clbrdrl\\brdrtbl\\clbrdrb\\brdrtbl\\clbrdrr\\brdrtbl \\clshdrawnil \\clftsWidth3\\clwWidth720\\cellx11790\\row").arg(member->fname).arg(member->lname).arg(member->job).arg(member->uid, 8, 10, QChar('0')));
+        row.append(QString("\\pard\\plain \\intbl \\s11\\ri144\\li144\\aspalpha\\aspnum\\qc\\f0\\b\\fs96 %1\\par\\pard\\plain \\intbl \\s12\\ri144\\li144\\aspalpha\\aspnum\\qc\\f0\\b\\fs72 %2\\par\\pard\\plain \\intbl \\s135\\ri144\\li144\\aspalpha\\aspnum\\qc\\f0\\b\\sb120\\fs56 %3\\cell\\pard\\plain \\intbl \\s14\\ri144\\li144\\aspalpha\\aspnum\\qc\\f1\\fs18 *%4*\\cell\\pard\\plain \\intbl \\trowd\\irow0\\irowband0\\trgaph15\\trrh-2880\\trleft0\\trkeep\\trftsWidth1\\trpaddl15\\trpaddr15\\trpaddfl3\\trpaddfr3\\clvertalc \\cltxlrtb \\clbrdrt\\brdrtbl\\clbrdrl\\brdrtbl\\clbrdrb\\brdrtbl\\clbrdrr\\brdrtbl \\clshdrawnil \\clftsWidth3\\clwWidth5040\\cellx5040\\clvertalc \\cltxbtlr \\clbrdrt\\brdrtbl\\clbrdrl\\brdrtbl\\clbrdrb\\brdrtbl\\clbrdrr\\brdrtbl \\clshdrawnil \\clftsWidth3\\clwWidth720\\cellx5760\\clvertalc \\cltxlrtb \\clbrdrt\\brdrtbl\\clbrdrl\\brdrtbl\\clbrdrb\\brdrtbl\\clbrdrr\\brdrtbl \\clshdrawnil \\clftsWidth3\\clwWidth270\\cellx6030\\clvertalc \\cltxlrtb \\clbrdrt\\brdrtbl\\clbrdrl\\brdrtbl\\clbrdrb\\brdrtbl\\clbrdrr\\brdrtbl \\clshdrawnil \\clftsWidth3\\clwWidth5040\\cellx11070\\clvertalc \\cltxbtlr \\clbrdrt\\brdrtbl\\clbrdrl\\brdrtbl\\clbrdrb\\brdrtbl\\clbrdrr\\brdrtbl \\clshdrawnil \\clftsWidth3\\clwWidth720\\cellx11790\\row").arg(member->fname).arg(member->lname).arg(member->title).arg(member->uid, 8, 10, QChar('0')));
         str.append(row);
         //End row
     }
@@ -244,7 +239,6 @@ void MainWindow::importData()
     int i = 13; // The first row of data is row 13
     while((temp = data.read(i,2).toString()) != QString("")) // Iterate through all the rows with first name values
     {
-        qDebug() << data.read(i,2).toString();
         TeamMember temp(data.read(i, 2).toString(), data.read(i, 3).toString());
         temp.email = data.read(i, 4).toString();
         temp.phone = data.read(i, 5).toString();
@@ -259,7 +253,22 @@ void MainWindow::importData()
         temp.comments.append("Shirt Size: " + data.read(i, 13).toString() + "\n"); //Shirt Size
         temp.comments.append("Team Affiliation: " + data.read(i, 14).toString() + "\n"); //Team
         //Role is column 6, Day is column 7
-
+        do
+        {
+            if(data.read(i,7).toString() == QString("")) //If the day column is empty, this is a special title
+            {
+                temp.title = data.read(i, 6).toString();
+            }
+            else
+            {
+                Job *jobTemp = new Job(data.read(i, 6).toString(), false);
+                temp.jobs.insert(data.read(i, 7).toString(), *jobTemp);
+            }
+        }
+        //If the next row contains more data about the same person, continue parsing their data.
+        //If the next row contains data about a different person, finish this loop, insert them
+        //into the database and continue to the next iteration.
+        while((data.read(++i, 2) == temp.fname) && (data.read(i, 3) == temp.lname));
         //Append the volunteer to the UI
         model->memberList.append(temp);
 
@@ -269,8 +278,6 @@ void MainWindow::importData()
         member_data.parse<0>(parse_data);
         rapidxml::xml_node<> *clone = db.clone_node(member_data.first_node());
         db.first_node()->first_node()->append_node(clone);
-
-        i++;
     }
     model->refresh();
 }
@@ -309,6 +316,10 @@ void MainWindow::openMemberView(QModelIndex index)
     ui->phone->setText(member.phone);
     ui->comments->clear();
     ui->comments->appendPlainText(member.comments);
+    ui->title->setText(member.title);
+    ui->friday->setText(member.jobs.find(QString("Fri")).value().name);
+    ui->saturday->setText(member.jobs.find(QString("Sat")).value().name);
+    ui->sunday->setText(member.jobs.find(QString("Sun")).value().name);
 
     selectedMember = index;
 }
@@ -318,6 +329,7 @@ void MainWindow::closeMemberView()
     ui->name->setText("");
     ui->email->setText("");
     ui->phone->setText("");
+
     ui->comments->clear();
 
     selectedMember = model->index(-1);
