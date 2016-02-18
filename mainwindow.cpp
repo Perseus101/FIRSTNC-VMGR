@@ -19,6 +19,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionRegister, SIGNAL(triggered(bool)), &reg, SLOT(show()));
     connect(ui->barcodeInput, SIGNAL(textChanged(QString)), this, SLOT(startBarcodeRead()));
     connect(ui->nameList, SIGNAL(clicked(QModelIndex)), this, SLOT(openMemberView(QModelIndex)));
+    connect(ui->comments, SIGNAL(textChanged()), this, SLOT(updateSelectedComments()));
 
     connect(&reg, SIGNAL(registered(TeamMember)), this, SLOT(finishRegister(TeamMember)));
 
@@ -314,8 +315,12 @@ void MainWindow::openMemberView(QModelIndex index)
     ui->name->setText(member.fname + " " + member.lname);
     ui->email->setText(member.email);
     ui->phone->setText(member.phone);
+
+    memberChanged = true;
     ui->comments->clear();
+    memberChanged = true;
     ui->comments->appendPlainText(member.comments);
+
     ui->title->setText(member.title);
     ui->friday->setText(member.jobs.find(QString("Fri")).value().name);
     ui->saturday->setText(member.jobs.find(QString("Sat")).value().name);
@@ -330,9 +335,76 @@ void MainWindow::closeMemberView()
     ui->email->setText("");
     ui->phone->setText("");
 
+    memberChanged = true;
     ui->comments->clear();
 
     selectedMember = model->index(-1);
+}
+
+void MainWindow::updateMemberData(QModelIndex index, TeamMember new_member)
+{
+    if(!index.isValid())
+        return;
+    TeamMember old_member = qvariant_cast<TeamMember>(model->data(index, 6));
+
+    //Find the member node of the member at the given index
+    rapidxml::xml_node<> *team_members_node = db.first_node()->first_node("teammembers"), *member_data = NULL;
+    for (member_data = team_members_node->first_node("member"); member_data; member_data = member_data->next_sibling())
+    {
+        if(atoi(member_data->first_attribute("uid")->value()) == old_member.uid)
+            break;
+    }
+    //Update the member node and the member variable with the new data
+    if(member_data)
+    {
+        //Check which elements have been changed and update them in the database file.
+        if(old_member.fname != new_member.fname)
+        {
+            char *dat = db.allocate_string(0, new_member.fname.size());
+            strcpy(dat, new_member.fname.toStdString().c_str());
+            member_data->first_attribute("fname")->value(dat);
+        }
+        if(old_member.lname != new_member.lname)
+        {
+            char *dat = db.allocate_string(0, new_member.lname.size());
+            strcpy(dat, new_member.lname.toStdString().c_str());
+            member_data->first_attribute("lname")->value(dat);
+        }
+        if(old_member.email != new_member.email)
+        {
+            char *dat = db.allocate_string(0, new_member.email.size());
+            strcpy(dat, new_member.email.toStdString().c_str());
+            member_data->first_attribute("email")->value(dat);
+        }
+        if(old_member.phone != new_member.phone)
+        {
+            char *dat = db.allocate_string(0, new_member.phone.size());
+            strcpy(dat, new_member.phone.toStdString().c_str());
+            member_data->first_attribute("phone")->value(dat);
+        }
+        if(old_member.title != new_member.title)
+        {
+            char *dat = db.allocate_string(0, new_member.title.size());
+            strcpy(dat, new_member.title.toStdString().c_str());
+            member_data->first_attribute("title")->value(dat);
+        }
+        if(old_member.comments != new_member.comments)
+        {
+            char *dat = db.allocate_string(0, new_member.comments.size());
+            strcpy(dat, new_member.comments.toStdString().c_str());
+            member_data->first_attribute("comments")->value(dat);
+        }
+    }
+    else
+    {
+        //Member couldn't be found in the database file- Error?
+        qDebug() << "Not found";
+        return;
+    }
+
+    QVariant var;
+    var.setValue(new_member);
+    model->setData(index, var);
 }
 
 void MainWindow::startBarcodeRead()
@@ -370,7 +442,7 @@ void MainWindow::signIn()
     if(selectedMember.isValid())
     {
         TeamMember temp = model->memberList.at(selectedMember.row());
-        //temp.in_time = QDateTime::currentDateTime();
+
         model->memberList.replace(selectedMember.row(), temp);
     }
 }
@@ -379,10 +451,19 @@ void MainWindow::signOut()
 {
     if(selectedMember.isValid())
     {
-//        if(!(model->memberList.at(selectedMember.row()).in_time.isValid())) // User isn't signed in, therefore can't sign out.
-//            return;
-        TeamMember temp = model->memberList.at(selectedMember.row());
-//        temp.out_time = QDateTime::currentDateTime();
-        model->memberList.replace(selectedMember.row(), temp);
+        //Method stub
     }
+}
+
+void MainWindow::updateSelectedComments()
+{
+    if(memberChanged)
+    {
+        memberChanged = false;
+        qDebug() << "Test";
+        return;
+    }
+    TeamMember new_member = qvariant_cast<TeamMember>(model->data(selectedMember, 6));
+    new_member.comments = ui->comments->toPlainText();
+    updateMemberData(selectedMember, new_member);
 }

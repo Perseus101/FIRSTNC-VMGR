@@ -51,11 +51,16 @@ private slots:
     void openMemberView(QModelIndex);
     void closeMemberView();
 
+    void updateMemberData(QModelIndex, TeamMember);
+
     void startBarcodeRead();
     void endBarcodeRead();
 
     void signIn();
     void signOut();
+
+    void updateSelectedComments();
+
 private:
 
     void saveDatabase(QString);
@@ -65,7 +70,7 @@ private:
 
     rapidxml::xml_document<> db;
     Register reg;
-    bool readingBarcode;
+    bool readingBarcode, memberChanged;
     QModelIndex selectedMember;
 
     int nextUid;
