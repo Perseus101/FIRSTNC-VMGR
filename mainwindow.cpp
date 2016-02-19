@@ -4,7 +4,8 @@
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
-    model(new TeamMemberListModel(this)),
+    listModel(new TeamMemberListModel(this)),
+    tableModel(new TeamMemberTableModel(this, &(listModel->memberList))),
     reg(),
     readingBarcode(false)
 {
@@ -25,26 +26,15 @@ MainWindow::MainWindow(QWidget *parent) :
 
     // Set up the list of names to be populated from the database
 
-    ui->nameList->setModel(model);
+    ui->nameList->setModel(listModel);
     ui->nameList->setEditTriggers(QAbstractItemView::NoEditTriggers); // Prevent editing data
 
     openData("database.db");
 
-    // Set up tables on admin panel showing in and out times
-    ui->inTimes->setColumnCount(2);
-    ui->inTimes->setRowCount(model->memberList.size());
-    ui->inTimes->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch); //Make the columns fill the whitespace
-    ui->inTimes->verticalHeader()->setVisible(false);
+    // Set up the admin panel
+    ui->adminTable->setModel(tableModel);
+    ui->adminTable->setItemDelegate(new TeamMemberTableDelegate());
 
-    QStringList headers;
-    headers << "Member" << "In Time";
-    ui->inTimes->setHorizontalHeaderLabels(headers);
-
-    int i = 0;
-    for(QList<TeamMember>::iterator it = model->memberList.begin(); it != model->memberList.end(); it++, i++)
-    {
-        ui->inTimes->setItem(i, 0, new QTableWidgetItem(it->fname + it->lname));
-    }
 }
 
 MainWindow::~MainWindow()
@@ -82,7 +72,7 @@ bool MainWindow::newData()
         QFile::remove("database.db");
         QFile::copy("db_template.xml", "database.db");
         //Clear out all currently loaded data
-        model->memberList.clear();
+        listModel->memberList.clear();
         //Load the now blank database
         openData("database.db");
         return true;
@@ -105,7 +95,7 @@ void MainWindow::openData()
 
 void MainWindow::openData(QString filename)
 {
-    //Populate model with names
+    //Populate listModel with names
     QFile db_file(filename);
     if(db_file.open(QFile::ReadWrite | QFile::Text))
     {
@@ -140,7 +130,7 @@ void MainWindow::openData(QString filename)
             i++;
 
         if(i != 0)
-            model->insertRows(0, i-1);
+            listModel->insertRows(0, i-1);
 
         QVariant var;
         i = 0;
@@ -157,14 +147,14 @@ void MainWindow::openData(QString filename)
                 temp.jobs.insert(QString(job_node->first_attribute("day")->value()), Job(job_node->first_attribute("name")->value(), bool(atoi(job_node->first_attribute("pres")->value()))));
             }
             var.setValue(temp);
-            model->setData(model->index(i), var);
+            listModel->setData(listModel->index(i), var);
         }
     }
     else
     {
         //TODO handle error
     }
-    openMemberView(model->index(0));
+    openMemberView(listModel->index(0));
 }
 
 void MainWindow::saveData()
@@ -196,7 +186,7 @@ void MainWindow::exportData()
     QString str("{\\rtf\\ansi\\deff0{\\fonttbl{\\f0\\fswiss Arial;}{\\f1\\fmodern IDAutomationHC39M;}}{\\colortbl;\\red0\\green0\\blue0;\\red255\\green0\\blue0;\\red255\\green102\\blue0;\\red0\\green128\\blue0;\\red0\\green0\\blue255;\\red128\\green0\\blue128;}{\\stylesheet{\\s11\\ri144\\li144\\aspalpha\\aspnum\\qc\\f0\\b\\fs96 FirstName;}{\\s12\\ri144\\li144\\aspalpha\\aspnum\\qc\\f0\\b\\fs72 LastName;}{\\s13\\ri144\\li144\\aspalpha\\aspnum\\qc\\f0\\b\\sb120\\fs56 Job;}{\\s14\\ri144\\li144\\aspalpha\\aspnum\\qc\\f1\\fs18 Barcode;}{\\s21\\sbasedon13\\cf5\\ri144\\li144\\aspalpha\\aspnum\\qc\\f0\\b\\sb120\\fs56 Job: Judge;}{\\s22\\sbasedon13\\cf2\\ri144\\li144\\aspalpha\\aspnum\\qc\\f0\\b\\sb120\\fs56 Job: Referee;}{\\s23\\sbasedon13\\cf3\\ri144\\li144\\aspalpha\\aspnum\\qc\\f0\\b\\sb120\\fs56 Job: Robot Inspector;}{\\s24\\sbasedon13\\cf4\\ri144\\li144\\aspalpha\\aspnum\\qc\\f0\\b\\sb120\\fs56 Job: Safety;}{\\s25\\sbasedon13\\cf6\\ri144\\li144\\aspalpha\\aspnum\\qc\\f0\\b\\sb120\\fs56 Job: Staff;}}\\paperw12240\\paperh15840\\margl225\\margr225\\margt720\\margb0\\viewkind1");
 
     //Populate the table with nametags
-    for(QList<TeamMember>::iterator member = model->memberList.begin(); member != model->memberList.end(); member++)
+    for(QList<TeamMember>::iterator member = listModel->memberList.begin(); member != listModel->memberList.end(); member++)
     {
         //Start row
         QString row("");
@@ -207,7 +197,7 @@ void MainWindow::exportData()
 
         //Second Column
         member++;
-        if(member == model->memberList.end()) //If there are an odd number of nametags, create a blank one in the right column and exit
+        if(member == listModel->memberList.end()) //If there are an odd number of nametags, create a blank one in the right column and exit
         {
             row.append(QString("\\pard\\plain \\intbl \\s11\\ri144\\li144\\aspalpha\\aspnum\\qc\\f0\\b\\fs96 \\par\\pard\\plain \\intbl \\s12\\ri144\\li144\\aspalpha\\aspnum\\qc\\f0\\b\\fs72 \\par\\pard\\plain \\intbl \\s13\\\\ri144\\li144\\aspalpha\\aspnum\\qc\\f0\\b\\sb120\\fs56 \\cell\\pard\\plain \\intbl \\s14\\ri144\\li144\\aspalpha\\aspnum\\qc\\f1\\fs18 \\cell\\pard\\plain \\intbl \\trowd\\irow0\\irowband0\\trgaph15\\trrh-2880\\trleft0\\trkeep\\trftsWidth1\\trpaddl15\\trpaddr15\\trpaddfl3\\trpaddfr3\\clvertalc \\cltxlrtb \\clbrdrt\\brdrtbl\\clbrdrl\\brdrtbl\\clbrdrb\\brdrtbl\\clbrdrr\\brdrtbl \\clshdrawnil \\clftsWidth3\\clwWidth5040\\cellx5040\\clvertalc \\cltxbtlr \\clbrdrt\\brdrtbl\\clbrdrl\\brdrtbl\\clbrdrb\\brdrtbl\\clbrdrr\\brdrtbl \\clshdrawnil \\clftsWidth3\\clwWidth720\\cellx5760\\clvertalc \\cltxlrtb \\clbrdrt\\brdrtbl\\clbrdrl\\brdrtbl\\clbrdrb\\brdrtbl\\clbrdrr\\brdrtbl \\clshdrawnil \\clftsWidth3\\clwWidth270\\cellx6030\\clvertalc \\cltxlrtb \\clbrdrt\\brdrtbl\\clbrdrl\\brdrtbl\\clbrdrb\\brdrtbl\\clbrdrr\\brdrtbl \\clshdrawnil \\clftsWidth3\\clwWidth5040\\cellx11070\\clvertalc \\cltxbtlr \\clbrdrt\\brdrtbl\\clbrdrl\\brdrtbl\\clbrdrb\\brdrtbl\\clbrdrr\\brdrtbl \\clshdrawnil \\clftsWidth3\\clwWidth720\\cellx11790\\row"));
             str.append(row);
@@ -271,7 +261,7 @@ void MainWindow::importData()
         //into the database and continue to the next iteration.
         while((data.read(++i, 2) == temp.fname) && (data.read(i, 3) == temp.lname));
         //Append the volunteer to the UI
-        model->memberList.append(temp);
+        listModel->memberList.append(temp);
 
         //Apend the volunteer to the database
         rapidxml::xml_document<> member_data;
@@ -280,7 +270,7 @@ void MainWindow::importData()
         rapidxml::xml_node<> *clone = db.clone_node(member_data.first_node());
         db.first_node()->first_node()->append_node(clone);
     }
-    model->refresh();
+    listModel->refresh();
 }
 
 void MainWindow::beginRegister()
@@ -302,15 +292,15 @@ void MainWindow::finishRegister(TeamMember member)
     db.first_node()->first_node()->append_node(clone);
 
     //Display new member in member list
-    model->memberList.append(member);
-    model->refresh();
+    listModel->memberList.append(member);
+    listModel->refresh();
 }
 
 void MainWindow::openMemberView(QModelIndex index)
 {
     if(!index.isValid())
         return;
-    TeamMember member = qvariant_cast<TeamMember>(model->data(index, 6));
+    TeamMember member = qvariant_cast<TeamMember>(listModel->data(index, 6));
 
     ui->name->setText(member.fname + " " + member.lname);
     ui->email->setText(member.email);
@@ -338,14 +328,14 @@ void MainWindow::closeMemberView()
     memberChanged = true;
     ui->comments->clear();
 
-    selectedMember = model->index(-1);
+    selectedMember = listModel->index(-1);
 }
 
 void MainWindow::updateMemberData(QModelIndex index, TeamMember new_member)
 {
     if(!index.isValid())
         return;
-    TeamMember old_member = qvariant_cast<TeamMember>(model->data(index, 6));
+    TeamMember old_member = qvariant_cast<TeamMember>(listModel->data(index, 6));
 
     //Find the member node of the member at the given index
     rapidxml::xml_node<> *team_members_node = db.first_node()->first_node("teammembers"), *member_data = NULL;
@@ -404,7 +394,7 @@ void MainWindow::updateMemberData(QModelIndex index, TeamMember new_member)
 
     QVariant var;
     var.setValue(new_member);
-    model->setData(index, var);
+    listModel->setData(index, var);
 }
 
 void MainWindow::startBarcodeRead()
@@ -425,12 +415,12 @@ void MainWindow::endBarcodeRead()
         int searchUid = ui->barcodeInput->text().toInt();
         //Input matches valid barcode format
         int i = 0;
-        for(QList<TeamMember>::iterator it = model->memberList.begin(); it != model->memberList.end(); it++, i++)
+        for(QList<TeamMember>::iterator it = listModel->memberList.begin(); it != listModel->memberList.end(); it++, i++)
         {
             if(it->uid == searchUid)
-                openMemberView(model->index(i));
+                openMemberView(listModel->index(i));
         }
-//        if(!(model->memberList.at(selectedMember.row()).in_time.isValid()))
+//        if(!(listModel->memberList.at(selectedMember.row()).in_time.isValid()))
 //            signIn();
     }
     ui->barcodeInput->setText(QString(""));
@@ -441,9 +431,9 @@ void MainWindow::signIn()
 {
     if(selectedMember.isValid())
     {
-        TeamMember temp = model->memberList.at(selectedMember.row());
+        TeamMember temp = listModel->memberList.at(selectedMember.row());
 
-        model->memberList.replace(selectedMember.row(), temp);
+        listModel->memberList.replace(selectedMember.row(), temp);
     }
 }
 
@@ -460,10 +450,9 @@ void MainWindow::updateSelectedComments()
     if(memberChanged)
     {
         memberChanged = false;
-        qDebug() << "Test";
         return;
     }
-    TeamMember new_member = qvariant_cast<TeamMember>(model->data(selectedMember, 6));
+    TeamMember new_member = qvariant_cast<TeamMember>(listModel->data(selectedMember, 6));
     new_member.comments = ui->comments->toPlainText();
     updateMemberData(selectedMember, new_member);
 }

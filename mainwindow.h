@@ -14,6 +14,8 @@
 #include <QDebug>
 
 #include "teammemberlistmodel.h"
+#include "teammembertablemodel.h"
+#include "teammembertabledelegate.h"
 #include "teammember.h"
 #include "register.h"
 #include "rapidxml/rapidxml.hpp"
@@ -66,7 +68,8 @@ private:
     void saveDatabase(QString);
 
     Ui::MainWindow *ui;
-    TeamMemberListModel* model;
+    TeamMemberListModel* listModel;
+    TeamMemberTableModel* tableModel;
 
     rapidxml::xml_document<> db;
     Register reg;

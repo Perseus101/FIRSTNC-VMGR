@@ -18,7 +18,9 @@ SOURCES += main.cpp\
         mainwindow.cpp \
     teammember.cpp \
     teammemberlistmodel.cpp \
-    register.cpp
+    register.cpp \
+    teammembertablemodel.cpp \
+    teammembertabledelegate.cpp
 
 HEADERS  += mainwindow.h \
     teammember.h \
@@ -27,7 +29,9 @@ HEADERS  += mainwindow.h \
     rapidxml/rapidxml_utils.hpp \
     rapidxml/rapidxml_print.hpp \
     rapidxml/rapidxml.hpp \
-    register.h
+    register.h \
+    teammembertablemodel.h \
+    teammembertabledelegate.h
 
 FORMS    += mainwindow.ui \
     register.ui

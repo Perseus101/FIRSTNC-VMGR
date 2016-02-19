@@ -1,21 +1,24 @@
-#ifndef TEAMMEMBERLISTMODEL_H
-#define TEAMMEMBERLISTMODEL_H
+#ifndef TEAMMEMBERTABLEMODEL_H
+#define TEAMMEMBERTABLEMODEL_H
 
-#include <QAbstractListModel>
+#include <QAbstractTableModel>
 #include <QList>
 
 #include "teammember.h"
 
-class TeamMemberListModel : public QAbstractListModel
+class TeamMemberTableModel : public QAbstractTableModel
 {
     Q_OBJECT
 
 public:
-    TeamMemberListModel(QObject *parent = 0);
+    TeamMemberTableModel(QObject *parent = 0);
+    TeamMemberTableModel(QObject *, QList<TeamMember> *);
 
-    ~TeamMemberListModel();
+    ~TeamMemberTableModel();
 
     int rowCount(const QModelIndex &parent = QModelIndex()) const;
+    int columnCount(const QModelIndex &parent = QModelIndex()) const;
+
     QVariant data(const QModelIndex &index, int role) const;
     QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const;
 
@@ -24,10 +27,11 @@ public:
     bool insertRows(int position, int rows, const QModelIndex &index = QModelIndex());
     bool removeRows(int position, int rows, const QModelIndex &index = QModelIndex());
 
+    Qt::ItemFlags flags(const QModelIndex & index) const;
+
     void refresh();
 
-    QList<TeamMember> memberList;
+    QList<TeamMember> *memberList;
 };
 
-
-#endif // TEAMMEMBERLISTMODEL_H
+#endif // TEAMMEMBERTABLEMODEL_H
