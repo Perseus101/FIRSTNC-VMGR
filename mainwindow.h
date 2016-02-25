@@ -54,6 +54,7 @@ private slots:
     void closeMemberView();
 
     void updateMemberData(QModelIndex, TeamMember);
+    void updateMemberData(QModelIndex, QModelIndex);
 
     void startBarcodeRead();
     void endBarcodeRead();
@@ -77,7 +78,6 @@ private:
     QModelIndex selectedMember;
 
     int nextUid;
-
 };
 
 #endif // MAINWINDOW_H

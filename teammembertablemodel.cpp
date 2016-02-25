@@ -26,6 +26,7 @@ int TeamMemberTableModel::rowCount(const QModelIndex &parent) const
 
 int TeamMemberTableModel::columnCount(const QModelIndex &parent) const
 {
+    qDebug() << "Without this debug statement, the table headers do not appear. It is unclear why.";
     return 8;
 }
 

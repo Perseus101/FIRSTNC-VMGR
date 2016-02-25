@@ -22,6 +22,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->nameList, SIGNAL(clicked(QModelIndex)), this, SLOT(openMemberView(QModelIndex)));
     connect(ui->comments, SIGNAL(textChanged()), this, SLOT(updateSelectedComments()));
 
+    connect(tableModel, SIGNAL(dataChanged(QModelIndex,QModelIndex)), this, SLOT(updateMemberData(QModelIndex,QModelIndex)));
     connect(&reg, SIGNAL(registered(TeamMember)), this, SLOT(finishRegister(TeamMember)));
 
     // Set up the list of names to be populated from the database
@@ -165,8 +166,6 @@ void MainWindow::saveData()
 
 void MainWindow::saveDatabase(QString filename)
 {
-    using namespace rapidxml;
-
     //Print the contents of the database into the string
     std::string s;
     rapidxml::print(std::back_inserter(s), db);
@@ -227,10 +226,11 @@ void MainWindow::importData()
         return;
     QXlsx::Document data(QFileDialog::getOpenFileName(this, QString(), QString(), tr("Excel Spreadsheet (*.xlsx)")));
     QString temp("");
+    nextUid = 0;
     int i = 13; // The first row of data is row 13
     while((temp = data.read(i,2).toString()) != QString("")) // Iterate through all the rows with first name values
     {
-        TeamMember temp(data.read(i, 2).toString(), data.read(i, 3).toString());
+        TeamMember temp(data.read(i, 2).toString(), data.read(i, 3).toString(), nextUid++);
         temp.email = data.read(i, 4).toString();
         temp.phone = data.read(i, 5).toString();
         //Build comments section
@@ -247,14 +247,9 @@ void MainWindow::importData()
         do
         {
             if(data.read(i,7).toString() == QString("")) //If the day column is empty, this is a special title
-            {
                 temp.title = data.read(i, 6).toString();
-            }
             else
-            {
-                Job *jobTemp = new Job(data.read(i, 6).toString(), false);
-                temp.jobs.insert(data.read(i, 7).toString(), *jobTemp);
-            }
+                temp.jobs.insert(data.read(i, 7).toString(), Job(data.read(i, 6).toString(), false));
         }
         //If the next row contains more data about the same person, continue parsing their data.
         //If the next row contains data about a different person, finish this loop, insert them
@@ -397,6 +392,89 @@ void MainWindow::updateMemberData(QModelIndex index, TeamMember new_member)
     listModel->setData(index, var);
 }
 
+void MainWindow::updateMemberData(QModelIndex topLeft, QModelIndex bottomRight)
+{
+    TeamMember new_member = qvariant_cast<TeamMember>(listModel->data(topLeft, 6));
+    rapidxml::xml_node<> *team_members_node = db.first_node()->first_node("teammembers"), *member_data = NULL;
+    for (member_data = team_members_node->first_node("member"); member_data; member_data = member_data->next_sibling())
+        //Find a member node that has a matching UID
+        if(atoi(member_data->first_attribute("uid")->value()) == new_member.uid)
+            break;
+    //The model only ever edits one cell at a time, meaning topLeft and bottomRight will always be the same.
+    switch(topLeft.column())
+    {
+    case 0: //First Name
+    {
+        char *dat = db.allocate_string(0, new_member.fname.size());
+        strcpy(dat, new_member.fname.toStdString().c_str());
+        member_data->first_attribute("fname")->value(dat);
+    }
+        break;
+    case 1: //Last Name
+    {
+        char *dat = db.allocate_string(0, new_member.lname.size());
+        strcpy(dat, new_member.lname.toStdString().c_str());
+        member_data->first_attribute("lname")->value(dat);
+    }
+        break;
+    case 2: //Email
+    {
+        char *dat = db.allocate_string(0, new_member.email.size());
+        strcpy(dat, new_member.email.toStdString().c_str());
+        member_data->first_attribute("email")->value(dat);
+    }
+        break;
+    case 3: //Phone
+    {
+        char *dat = db.allocate_string(0, new_member.phone.size());
+        strcpy(dat, new_member.phone.toStdString().c_str());
+        member_data->first_attribute("phone")->value(dat);
+    }
+        break;
+    case 4: //Title
+    {
+        char *dat = db.allocate_string(0, new_member.title.size());
+        strcpy(dat, new_member.title.toStdString().c_str());
+        member_data->first_attribute("title")->value(dat);
+    }
+        break;
+    case 5: //Friday
+    case 6: //Saturday
+    case 7: //Sunday
+    {
+        char* targetDay = new char[3];
+        switch(topLeft.column())
+        {
+        case 5: //Friday
+            targetDay = "Fri";
+            break;
+        case 6: //Saturday
+            targetDay = "Sat";
+            break;
+        case 7: //Sunday
+            targetDay = "Sun";
+            break;
+        }
+
+        for(rapidxml::xml_node<> *job_node = member_data->first_node(); job_node; job_node = job_node->next_sibling())
+        {
+            if(strcmp(job_node->first_attribute("day")->value(), targetDay))
+            {
+                qDebug() << targetDay;
+                QString newName = new_member.jobs.find(QString(targetDay)).value().name;
+                char *dat = db.allocate_string(0, newName.size());
+                strcpy(dat, newName.toStdString().c_str());
+                job_node->first_attribute("name")->value(dat);
+                return;
+            }
+        }
+    }
+        break;
+    default:
+        break;
+    }
+}
+
 void MainWindow::startBarcodeRead()
 {
     if(!readingBarcode)
@@ -420,8 +498,7 @@ void MainWindow::endBarcodeRead()
             if(it->uid == searchUid)
                 openMemberView(listModel->index(i));
         }
-//        if(!(listModel->memberList.at(selectedMember.row()).in_time.isValid()))
-//            signIn();
+        signIn();
     }
     ui->barcodeInput->setText(QString(""));
     readingBarcode = false;
