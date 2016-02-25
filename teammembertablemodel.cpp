@@ -190,7 +190,6 @@ bool TeamMemberTableModel::removeRows(int position, int rows, const QModelIndex 
 
 void TeamMemberTableModel::refresh()
 {
-    qDebug() << memberList->at(0).fname;
     emit dataChanged(this->index(0, 0),this->index(this->rowCount(), this->columnCount()));
 }
 

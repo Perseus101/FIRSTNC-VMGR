@@ -460,7 +460,6 @@ void MainWindow::updateMemberData(QModelIndex topLeft, QModelIndex bottomRight)
         {
             if(strcmp(job_node->first_attribute("day")->value(), targetDay))
             {
-                qDebug() << targetDay;
                 QString newName = new_member.jobs.find(QString(targetDay)).value().name;
                 char *dat = db.allocate_string(0, newName.size());
                 strcpy(dat, newName.toStdString().c_str());
