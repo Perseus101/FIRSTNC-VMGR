@@ -14,7 +14,8 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionNew_2, SIGNAL(triggered(bool)), this, SLOT(newData()));
     connect(ui->actionOpen_2, SIGNAL(triggered(bool)), this, SLOT(openData()));
     connect(ui->actionSave_2, SIGNAL(triggered(bool)), this, SLOT(saveData()));
-    connect(ui->actionExport_Nametags, SIGNAL(triggered(bool)), this, SLOT(exportData()));
+    connect(ui->actionExport_Nametags, SIGNAL(triggered(bool)), this, SLOT(exportNametags()));
+    connect(ui->actionExport_Spreadsheet, SIGNAL(triggered(bool)), this, SLOT(exportData()));
     connect(ui->actionImport, SIGNAL(triggered(bool)), this, SLOT(importData()));
     connect(ui->actionRegister, SIGNAL(triggered(bool)), this, SLOT(beginRegister()));
     connect(ui->actionRegister, SIGNAL(triggered(bool)), &reg, SLOT(show()));
@@ -35,7 +36,6 @@ MainWindow::MainWindow(QWidget *parent) :
     // Set up the admin panel
     ui->adminTable->setModel(tableModel);
     ui->adminTable->setItemDelegate(new TeamMemberTableDelegate());
-
 }
 
 MainWindow::~MainWindow()
@@ -179,7 +179,7 @@ void MainWindow::saveDatabase(QString filename)
     }
 }
 
-void MainWindow::exportData()
+void MainWindow::exportNametags()
 {
     //Create string with RTF header
     QString str("{\\rtf\\ansi\\deff0{\\fonttbl{\\f0\\fswiss Arial;}{\\f1\\fmodern IDAutomationHC39M;}}{\\colortbl;\\red0\\green0\\blue0;\\red255\\green0\\blue0;\\red255\\green102\\blue0;\\red0\\green128\\blue0;\\red0\\green0\\blue255;\\red128\\green0\\blue128;}{\\stylesheet{\\s11\\ri144\\li144\\aspalpha\\aspnum\\qc\\f0\\b\\fs96 FirstName;}{\\s12\\ri144\\li144\\aspalpha\\aspnum\\qc\\f0\\b\\fs72 LastName;}{\\s13\\ri144\\li144\\aspalpha\\aspnum\\qc\\f0\\b\\sb120\\fs56 Job;}{\\s14\\ri144\\li144\\aspalpha\\aspnum\\qc\\f1\\fs18 Barcode;}{\\s21\\sbasedon13\\cf5\\ri144\\li144\\aspalpha\\aspnum\\qc\\f0\\b\\sb120\\fs56 Job: Judge;}{\\s22\\sbasedon13\\cf2\\ri144\\li144\\aspalpha\\aspnum\\qc\\f0\\b\\sb120\\fs56 Job: Referee;}{\\s23\\sbasedon13\\cf3\\ri144\\li144\\aspalpha\\aspnum\\qc\\f0\\b\\sb120\\fs56 Job: Robot Inspector;}{\\s24\\sbasedon13\\cf4\\ri144\\li144\\aspalpha\\aspnum\\qc\\f0\\b\\sb120\\fs56 Job: Safety;}{\\s25\\sbasedon13\\cf6\\ri144\\li144\\aspalpha\\aspnum\\qc\\f0\\b\\sb120\\fs56 Job: Staff;}}\\paperw12240\\paperh15840\\margl225\\margr225\\margt720\\margb0\\viewkind1");
@@ -217,6 +217,18 @@ void MainWindow::exportData()
     {
         exportFile.resize(0);
         exportFile.write(str.toLocal8Bit());
+    }
+}
+
+void MainWindow::exportData()
+{
+    QString csv = tableModel->getCSV();
+    QString filter = QString("Comma Separated Value Files (*.csv)");
+    QFile db_file(QFileDialog::getSaveFileName(this, QString(), QString(), filter, &filter));
+    if(db_file.open(QFile::ReadWrite | QFile::Text))
+    {
+        db_file.resize(0);
+        db_file.write(csv.toStdString().c_str());
     }
 }
 
@@ -266,6 +278,7 @@ void MainWindow::importData()
         db.first_node()->first_node()->append_node(clone);
     }
     listModel->refresh();
+    tableModel->refresh();
 }
 
 void MainWindow::beginRegister()

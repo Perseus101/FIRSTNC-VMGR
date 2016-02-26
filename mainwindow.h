@@ -45,6 +45,7 @@ private slots:
     void openData(QString);
     void saveData();
     void exportData();
+    void exportNametags();
     void importData();
 
     void beginRegister();

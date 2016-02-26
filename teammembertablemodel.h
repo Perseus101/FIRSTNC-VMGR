@@ -30,6 +30,7 @@ public:
     Qt::ItemFlags flags(const QModelIndex & index) const;
 
     void refresh();
+    QString getCSV();
 
     QList<TeamMember> *memberList;
 };

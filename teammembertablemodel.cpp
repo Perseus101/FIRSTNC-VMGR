@@ -193,6 +193,21 @@ void TeamMemberTableModel::refresh()
     emit dataChanged(this->index(0, 0),this->index(this->rowCount(), this->columnCount()));
 }
 
+QString TeamMemberTableModel::getCSV()
+{
+    QString csv;
+
+    for(int i = 0; i < rowCount(); i++)
+    {
+        for(int j = 0; j < columnCount(); j++)
+        {
+            csv.append(data(index(i, j), Qt::DisplayRole).toString() + ",");
+        }
+        csv.append('\n');
+    }
+    return csv;
+}
+
 Qt::ItemFlags TeamMemberTableModel::flags(const QModelIndex & index) const
 {
     return Qt::ItemIsSelectable |  Qt::ItemIsEditable | Qt::ItemIsEnabled ;

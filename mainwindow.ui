@@ -320,6 +320,7 @@
     <addaction name="actionImport"/>
     <addaction name="separator"/>
     <addaction name="actionExport_Nametags"/>
+    <addaction name="actionExport_Spreadsheet"/>
     <addaction name="separator"/>
     <addaction name="actionRegister"/>
    </widget>
@@ -382,6 +383,11 @@
   <action name="actionImport">
    <property name="text">
     <string>Import</string>
+   </property>
+  </action>
+  <action name="actionExport_Spreadsheet">
+   <property name="text">
+    <string>Export Spreadsheet</string>
    </property>
   </action>
  </widget>
