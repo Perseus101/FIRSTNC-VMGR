@@ -20,7 +20,9 @@ SOURCES += main.cpp\
     teammemberlistmodel.cpp \
     register.cpp \
     teammembertablemodel.cpp \
-    teammembertabledelegate.cpp
+    teammembertabledelegate.cpp \
+    job.cpp \
+    xmlutil.cpp
 
 HEADERS  += mainwindow.h \
     teammember.h \
@@ -31,7 +33,9 @@ HEADERS  += mainwindow.h \
     rapidxml/rapidxml.hpp \
     register.h \
     teammembertablemodel.h \
-    teammembertabledelegate.h
+    teammembertabledelegate.h \
+    job.h \
+    xmlutil.h
 
 FORMS    += mainwindow.ui \
     register.ui

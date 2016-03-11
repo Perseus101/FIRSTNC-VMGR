@@ -26,7 +26,7 @@ int TeamMemberTableModel::rowCount(const QModelIndex &parent) const
 
 int TeamMemberTableModel::columnCount(const QModelIndex &parent) const
 {
-    qDebug() << "Without this debug statement, the table headers do not appear. It is unclear why.";
+    //qDebug() << "Without this debug statement, the table headers do not appear. It is unclear why.";
     return 8;
 }
 
@@ -42,28 +42,28 @@ QVariant TeamMemberTableModel::data(const QModelIndex &index, int role) const
         switch(index.column())
         {
         case 0: //First Name
-            return QVariant(memberList->at(index.row()).fname);
+            return QVariant(memberList->at(index.row()).getFname());
             break;
         case 1: //Last Name
-            return QVariant(memberList->at(index.row()).lname);
+            return QVariant(memberList->at(index.row()).getLname());
             break;
         case 2: //Email
-            return QVariant(memberList->at(index.row()).email);
+            return QVariant(memberList->at(index.row()).getEmail());
             break;
         case 3: //Phone
-            return QVariant(memberList->at(index.row()).phone);
+            return QVariant(memberList->at(index.row()).getPhone());
             break;
         case 4: //Title
-            return QVariant(memberList->at(index.row()).title);
+            return QVariant(memberList->at(index.row()).getTitle());
             break;
         case 5: //Friday
-            return QVariant(memberList->at(index.row()).jobs.find(QString("Fri")).value().name);
+            return QVariant(memberList->at(index.row()).jobs.at(0).getName());
             break;
         case 6: //Saturday
-            return QVariant(memberList->at(index.row()).jobs.find(QString("Sat")).value().name);
+            return QVariant(memberList->at(index.row()).jobs.at(1).getName());
             break;
         case 7: //Sunday
-            return QVariant(memberList->at(index.row()).jobs.find(QString("Sun")).value().name);
+            return QVariant(memberList->at(index.row()).jobs.at(2).getName());
             break;
         default:
             return QVariant();
@@ -132,28 +132,28 @@ bool TeamMemberTableModel::setData(const QModelIndex &index, const QVariant &val
         switch(index.column())
         {
         case 0: //First Name
-            temp.fname = value.toString();
+            temp.setFname(value.toString());
             break;
         case 1: //Last Name
-            temp.lname = value.toString();
+            temp.setLname(value.toString());
             break;
         case 2: //Email
-            temp.email = value.toString();
+            temp.setEmail(value.toString());
             break;
         case 3: //Phone
-            temp.phone = value.toString();
+            temp.setPhone(value.toString());
             break;
         case 4: //Title
-            temp.title = value.toString();
+            temp.setTitle(value.toString());
             break;
         case 5: //Friday
-            temp.jobs.find(QString("Fri")).value().name = value.toString();
+            temp.jobs[0].setName(value.toString());
             break;
         case 6: //Saturday
-            temp.jobs.find(QString("Sat")).value().name = value.toString();
+            temp.jobs[1].setName(value.toString());
             break;
         case 7: //Sunday
-            temp.jobs.find(QString("Sun")).value().name = value.toString();
+            temp.jobs[2].setName(value.toString());
             break;
         default:
             return false;

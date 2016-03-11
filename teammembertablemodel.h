@@ -4,6 +4,8 @@
 #include <QAbstractTableModel>
 #include <QList>
 
+#include <QDebug>
+
 #include "teammember.h"
 
 class TeamMemberTableModel : public QAbstractTableModel

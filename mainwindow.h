@@ -22,6 +22,8 @@
 #include "rapidxml/rapidxml_utils.hpp"
 #include "rapidxml/rapidxml_print.hpp"
 
+#include "xmlutil.h"
+
 #include "xlsxdocument.h"
 
 namespace Ui {
@@ -35,7 +37,8 @@ class MainWindow : public QMainWindow
 public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
-
+signals:
+    void updateTables();
 protected:
      void closeEvent(QCloseEvent *event);
 

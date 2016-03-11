@@ -25,7 +25,7 @@ QVariant TeamMemberListModel::data(const QModelIndex &index, int role) const
     {
     case Qt::DisplayRole:
     {
-        return QVariant(memberList.at(index.row()).fname + " " + memberList.at(index.row()).lname);
+        return QVariant(memberList.at(index.row()).getFname() + " " + memberList.at(index.row()).getLname());
     }
         break;
     case 6:

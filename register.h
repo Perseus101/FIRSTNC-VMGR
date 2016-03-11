@@ -5,6 +5,8 @@
 
 #include "teammember.h"
 
+#include "rapidxml/rapidxml.hpp"
+
 namespace Ui {
 class Register;
 }
@@ -18,6 +20,8 @@ public:
     ~Register();
 
     Ui::Register *ui;
+    rapidxml::xml_node<> *teamMembersNode;
+    int nextUid;
 signals:
     void registered(TeamMember);
 

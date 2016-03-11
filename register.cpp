@@ -18,12 +18,8 @@ Register::~Register()
 
 void Register::registerFinished()
 {
-    TeamMember temp(ui->firstName->text(), ui->lastName->text());
-    //temp.age = 0; //TODO
+    TeamMember temp(teamMembersNode, ui->firstName->text(), ui->lastName->text(), ui->team->currentText(), ui->personalEmail->text(), ui->parentEmail->text(), "", nextUid++);
 
-    temp.title = ui->team->currentText();
-    temp.email = ui->personalEmail->text();
-    temp.phone = ui->parentEmail->text();
     hide();
 
     ui->firstName->setText("");
